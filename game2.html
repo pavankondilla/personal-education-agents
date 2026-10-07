@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aiplay – Bubble Pop Quiz</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 50%, #E0F6FF 100%);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            min-height: 100vh;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mobile Detection and Auto-Optimization */
+        body.mobile-detected {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Mobile/Web Toggle Button */
+        /* Toggle button removed - auto-detect mobile only */
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        #problem {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            z-index: 10;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            line-height: 1.4;
+            max-width: 80%;
+            margin: 0 auto;
+        }
+
+        /* MOBILE VERSION STYLES */
+        @media screen and (max-width: 768px), (pointer: coarse) {
+            body.mobile-version #problem {
+                top: 25px;
+                font-size: 18px;
+                left: 10px;
+                right: 10px;
+                background: rgba(255, 255, 255, 0.9);
+                padding: 12px 15px;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                max-width: calc(100% - 20px);
+                margin: 0;
+            }
+        }
+
+        /* INSTAGRAM REEL MOBILE FORMAT (9:16 Aspect Ratio) */
+        @media screen and (max-width: 768px) {
+            body.mobile-version {
+                position: fixed !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+                top: 0 !important;
+                left: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 50%, #E0F6FF 100%) !important;
+                display: block !important;
+            }
+            
+            body.mobile-version #gameContainer {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 50%, #E0F6FF 100%) !important;
+                border-radius: 0 !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-shadow: 0 0 30px rgba(255,255,255,0.3) !important;
+                border: 3px solid rgba(255,255,255,0.5) !important;
+            }
+            
+            body.mobile-version #gameCanvas {
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 25px !important;
+            }
+            
+            body.mobile-version #problem {
+                font-size: 15px !important;
+                top: 15px !important;
+                left: 15px !important;
+                right: 15px !important;
+                padding: 12px 15px !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-radius: 15px !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+                backdrop-filter: blur(10px) !important;
+                border: 2px solid rgba(255,255,255,0.7) !important;
+            }
+            
+            body.mobile-version #instructions {
+                font-size: 13px !important;
+                bottom: 15px !important;
+                left: 15px !important;
+                right: 15px !important;
+                background: rgba(255, 255, 255, 0.9) !important;
+                padding: 10px 15px !important;
+                border-radius: 12px !important;
+                backdrop-filter: blur(8px) !important;
+                border: 1px solid rgba(255,255,255,0.5) !important;
+            }
+            
+            body.mobile-version .bubble {
+                width: 45px !important;         /* Smaller for mobile optimization */
+                height: 45px !important;        /* Smaller for mobile optimization */
+                font-size: 9px !important;      /* Smaller font for compact display */
+                padding: 2px !important;        /* Minimal padding */
+                border-width: 2px !important;
+                max-width: 45px !important;
+                min-width: 45px !important;
+                min-height: 45px !important;
+                /* Enhanced mobile-optimized styling */
+                box-shadow: 0 0 12px rgba(255,255,255,0.4), 0 2px 8px rgba(0,0,0,0.25) !important;
+                /* Better text handling for smaller bubbles */
+                line-height: 1.0 !important;
+                word-wrap: break-word !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                font-weight: bold !important;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
+            }
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: #333;
+            font-size: 16px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,1) 0%, rgba(135,206,235,0.9) 50%, rgba(100,149,237,0.7) 100%);
+            border: 3px solid rgba(255,255,255,1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px; /* Smaller font for text options */
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            cursor: pointer; /* Ensure cursor changes to pointer on hover */
+            user-select: none;
+            transition: transform 0.1s ease;
+            box-shadow: 
+                0 0 20px rgba(255,255,255,0.5), /* Outer glow for shine */
+                0 4px 12px rgba(0,0,0,0.2); /* Deeper shadow */
+            word-wrap: break-word;
+            padding: 5px;
+            overflow: hidden;
+            max-width: 70px; /* Compact for text */
+        }
+
+        .bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 0 30px rgba(255,255,255,0.7), /* Enhanced shine on hover */
+                0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        /* MOBILE BUBBLE OPTIMIZATIONS - SMALLER SIZES */
+        @media screen and (max-width: 768px), (pointer: coarse) {
+            body.mobile-version .bubble {
+                width: 62px !important;         /* Reduced from 90px */
+                height: 62px !important;        /* Reduced from 90px */
+                font-size: 11px !important;     /* Reduced from 14px */
+                padding: 5px !important;        /* Reduced from 8px */
+                max-width: 62px !important;     /* Reduced from 85px */
+                border-width: 2px !important;
+                /* Enhanced touch target - still finger-friendly */
+                min-width: 44px;
+                min-height: 44px;
+                /* Better text handling */
+                line-height: 1.2 !important;
+                font-weight: 600 !important;
+            }
+            
+            body.mobile-version .bubble:active {
+                transform: scale(0.9);           /* More noticeable press effect */
+                transition: transform 0.1s ease;
+            }
+        }
+
+        /* Mobile Portrait Bubble Adjustments - SMALLER */
+        @media screen and (max-width: 768px) and (orientation: portrait) {
+            body.mobile-version .bubble {
+                width: 60px !important;         /* Reduced from 95px */
+                height: 60px !important;        /* Reduced from 95px */
+                font-size: 10px !important;     /* Reduced from 15px */
+                font-weight: bold !important;
+                padding: 6px !important;        /* Reduced from 10px */
+                /* Tighter spacing for more bubbles on screen */
+                margin: 2px !important;
+            }
+        }
+
+        /* No separate correct/trap backgrounds - all same */
+
+        .bubble.popped {
+            animation: pop 0.4s ease-out forwards; /* Slightly longer pop for bigger bubbles */
+        }
+
+        /* Mark animations */
+        .checkmark {
+            position: absolute;
+            font-size: 40px;
+            color: #4CAF50;
+            animation: appear 0.5s ease-out forwards;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cross {
+            position: absolute;
+            font-size: 40px;
+            color: #f44336;
+            animation: appear 0.5s ease-out forwards;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes appear {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(-180deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        @keyframes floatUp {
+            0% {
+                bottom: -100px;
+                opacity: 0;
+                transform: translateX(0) rotate(0deg) scale(0.8); /* Start smaller for emergence */
+            }
+            10% {
+                opacity: 1;
+                transform: translateX(0) rotate(0deg) scale(1);
+            }
+            100% {
+                bottom: 100vh;
+                opacity: 0;
+                transform: translateX(var(--drift)) rotate(var(--wobble)); /* Variable drift and wobble for interest */
+            }
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.8); /* Bigger pop scale */
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Particle effect for pop (simple CSS particles) */
+        .particles {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px; /* Bigger particles for big bubbles */
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Level progression visuals */
+        #levelIndicator {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            z-index: 10;
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Mobile-first topic selection overlay */
+        #topicOverlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto; /* allow scroll if content is tall */
+            padding: 24px 16px;
+        }
+        .overlay-card {
+            width: min(92vw, 520px);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            padding: 20px;
+            max-height: 92vh; /* keep within viewport */
+            overflow-y: auto;
+            text-align: center;
+        }
+        .app-title { font-size: 22px; margin: 0 0 8px; color: #1b3b5a; font-weight: 800; }
+        .app-sub { font-size: 14px; margin: 0 0 16px; color: #356b8c; font-weight: 600; }
+        .topic-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; /* Default to 3 columns for SQL support */
+            gap: 10px; 
+            margin-bottom: 14px; 
+        }
+        
+        @media (max-width: 700px) {
+            .topic-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .topic-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+        .topic-btn {
+            padding: 12px;
+            border: 0;
+            border-radius: 12px;
+            background: #87CEEB;
+            color: #0f2d44;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 3px 0 #6db6d6;
+            transform: translateY(-1px);
+        }
+        .topic-btn:active { transform: translateY(0); box-shadow: 0 1px 0 #6db6d6; }
+        .summary { text-align: left; background: #f6fbff; border: 1px solid #dbeffc; padding: 12px; border-radius: 12px; margin: 10px 0; }
+        .summary h4 { margin: 0 0 6px; font-size: 16px; color: #0f2d44; }
+        .summary p { margin: 0 0 6px; font-size: 14px; color: #23465f; }
+        .summary ul { margin: 6px 0 0 18px; padding: 0; }
+        .summary li { font-size: 14px; color: #23465f; }
+    .start-btn { width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 12px; background: #ffcf54; color: #1c273a; font-weight: 800; font-size: 16px; box-shadow: 0 3px 0 #e5b93d; position: sticky; bottom: 0; }
+        .start-btn:disabled { opacity: 0.5; }
+    .qa-preview { background:#fff; border:1px solid #e6eef6; border-radius:12px; padding:10px; margin-top:10px; text-align:left; }
+    .qa-preview h5 { margin:0 0 6px; font-size:14px; color:#0f2d44; }
+    .qa-item { font-size:13px; color:#23465f; margin:4px 0; }
+    .qa-item strong { color:#0f2d44; }
+    .details { background:#f9fcff; border:1px solid #dbeffc; border-radius:12px; padding:12px; margin-top:10px; text-align:left; }
+    .details h5 { margin:8px 0 6px; font-size:14px; color:#0f2d44; }
+    .details p, .details li { font-size:13px; color:#23465f; }
+
+    /* How-to modal */
+    #howToModal { position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:40; display:none; align-items:center; justify-content:center; padding:16px; overflow-y:auto; }
+    .modal-card { width:min(92vw,520px); background:#ffffff; border-radius:16px; box-shadow:0 10px 24px rgba(0,0,0,0.25); padding:18px; text-align:left; max-height:92vh; overflow-y:auto; }
+    .modal-card h3 { margin:0 0 8px; font-size:18px; color:#1b3b5a; }
+    .modal-card p { margin:6px 0; font-size:14px; color:#23465f; }
+    .modal-list { margin:6px 0 0 18px; padding:0; color:#23465f; font-size:14px; }
+    .modal-actions { margin-top:12px; display:flex; gap:10px; justify-content:flex-end; }
+    .modal-btn { padding:10px 14px; border:0; border-radius:10px; background:#ffcf54; color:#1c273a; font-weight:800; }
+
+        /* Responsive for mobile - compact */
+        @media (max-width: 768px) {
+            .bubble {
+                width: 70px;
+                height: 70px;
+                font-size: 10px;
+                max-width: 60px;
+            }
+            #problem {
+                font-size: 18px;
+            }
+            #problem {
+                font-size: 16px;
+                max-width: 90%;
+            }
+            .checkmark, .cross {
+                font-size: 30px;
+            }
+        }
+
+        /* Subtle cloud-like background elements for more interest (static, low-perf) */
+        .cloud {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+            opacity: 0.7;
+            animation: driftCloud 20s linear infinite;
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50px;
+        }
+
+        .cloud::before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }
+
+        .cloud::after {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            right: 10px;
+        }
+
+        @keyframes driftCloud {
+            0% { left: -100px; }
+            100% { left: 100vw; }
+        }
+
+        /* WEB VERSION STYLES */
+        body.web-version {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #87CEEB, #B0E0E6, #E0F6FF);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        body.web-version #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #87CEEB, #B0E0E6, #E0F6FF);
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        body.web-version #problem {
+            position: fixed !important;
+            top: 5% !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            font-size: 28px !important;
+            padding: 20px 30px !important;
+            max-width: 800px !important;
+            border-radius: 25px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #1c273a !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+            backdrop-filter: blur(15px) !important;
+            border: 3px solid rgba(135, 206, 235, 0.6) !important;
+            z-index: 1000 !important;
+            text-align: center !important;
+            font-weight: bold !important;
+        }
+        
+        body.web-version #instructions {
+            font-size: 16px !important;
+            bottom: 25px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            padding: 10px 18px !important;
+            border-radius: 10px !important;
+        }
+        
+        body.web-version .bubble {
+            width: 90px !important;
+            height: 90px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            border-width: 3px !important;
+            box-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 15px rgba(0,0,0,0.3) !important;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7) !important;
+        }
+        
+        body.web-version .bubble:hover {
+            transform: scale(1.15) !important;
+        }
+
+        /* MODE NOTIFICATION ANIMATIONS */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle button removed - auto mobile detection -->
+    <div id="gameContainer">
+        <div id="topicOverlay">
+            <div class="overlay-card">
+                <h1 class="app-title">Aiplay</h1>
+                <p class="app-sub">Math, AI Agents & SQL – Learn fast, then play</p>
+                <div class="topic-grid">
+                    <button class="topic-btn" data-topic="maths">Math</button>
+                    <button class="topic-btn" data-topic="aiAgents">AI Agents</button>
+                    <button class="topic-btn" data-topic="sql">SQL</button>
+                    <button class="topic-btn" data-topic="lawyer">Legal/Law</button>
+                    <button class="topic-btn" data-topic="python">Python</button>
+                    <button class="topic-btn" data-topic="cybersecurity">Cybersecurity</button>
+                    <button class="topic-btn" data-topic="digitalMarketing">Digital Marketing</button>
+                    <button class="topic-btn" data-topic="dataScience">Data Science</button>
+                </div>
+                <div class="summary" id="topicSummary" style="display:none">
+                    <h4 id="summaryTitle"></h4>
+                    <p id="summaryText"></p>
+                    <ul id="examplesList"></ul>
+                    <div class="qa-preview" id="qaPreview" style="display:none">
+                        <h5>Preview Q&A (first 3)</h5>
+                        <div id="qaItems"></div>
+                    </div>
+                    <div class="details" id="detailBox" style="display:none"></div>
+                </div>
+                <button id="startGameBtn" class="start-btn" disabled>Start Game</button>
+            </div>
+        </div>
+        <div id="problem"></div>
+    <div id="instructions">Tap (don’t swipe) the correct answer bubble.</div>
+        <canvas id="gameCanvas" width="100%" height="100%"></canvas> <!-- Canvas for potential future enhancements -->
+        
+        <!-- Static clouds for sky interest -->
+        <div class="cloud" style="width: 100px; height: 60px; top: 10%; animation-delay: 0s;"></div>
+        <div class="cloud" style="width: 80px; height: 50px; top: 20%; animation-delay: 5s;"></div>
+        <div class="cloud" style="width: 120px; height: 70px; top: 70%; animation-delay: 10s;"></div>
+    </div>
+
+    <!-- How to Play Modal for Bubble Game -->
+    <div id="howToModal">
+        <div class="modal-card">
+            <h3>How to Play</h3>
+            <p><strong>Game 1 – Bubble Pop</strong></p>
+            <ul class="modal-list">
+                <li>One question appears at top.</li>
+                <li>Tap the one correct bubble. Options are in fixed order.</li>
+                <li>Answer 3 questions to continue to Game 2.</li>
+            </ul>
+            <p><strong>Game 2 – Rocket Quiz</strong></p>
+            <ul class="modal-list">
+                <li>Pick the correct answer from 4 choices.</li>
+                <li>3 questions. Rocket reacts to your choice.</li>
+                <li>See your final scoreboard at the end.</li>
+            </ul>
+            <div class="modal-actions">
+                <button id="bubbleStartBtn" class="modal-btn">Start Bubble Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Preloaded topics with one-word options only
+                        const topics = {
+                            maths: {
+                                summary: 'Addition combines numbers to find a sum. Subtraction finds what remains (difference) after taking away. Below are concepts and examples aligned with the questions you\'ll play.',
+                                examples: ['Addition: 7+5', 'Subtraction: 15−6'],
+                                details: `
+                                    <h5>1) Addition</h5>
+                                    <p><strong>Definition:</strong> Combine numbers to get the <em>sum</em>. Symbol: <strong>+</strong>. The numbers added are <em>addends</em>.</p>
+                                    <p><strong>Use:</strong> Combine quantities. Example: items you have + items you get.</p>
+                                    <h5>2) Subtraction</h5>
+                                    <p><strong>Definition:</strong> Find the <em>difference</em> after taking away. Symbol: <strong>−</strong>. Start with a <em>minuend</em>, take a <em>subtrahend</em>.</p>
+                                    <p><strong>Use:</strong> What remains or how much more/less.</p>
+                                    <h5>Examples</h5>
+                                    <ul>
+                                        <li>7 + 5 = 12</li>
+                                        <li>15 − 6 = 9</li>
+                                    </ul>
+                                `,
+                                questions: [
+                                    { question: 'Addition symbol?', options: ['+','-','×','÷'], answer: '+', explanation: 'Addition uses +.' },
+                                    { question: 'Result of addition?', options: ['sum','diff','prod','quot'], answer: 'sum', explanation: 'Sum is the result.' },
+                                    { question: 'Subtraction symbol?', options: ['−','×','+','÷'], answer: '−', explanation: 'Subtraction uses −.' },
+                                    { question: 'Result of subtraction?', options: ['difference','sum','product','quotient'], answer: 'difference', explanation: 'Difference is the result.' },
+                                    { question: '7+5=?', options: ['11','12','13','14'], answer: '12', explanation: '7+5 equals 12.' },
+                                    { question: '15−6=?', options: ['7','8','9','10'], answer: '9', explanation: '15−6 equals 9.' }
+                                ]
+                            },
+                            aiAgents: {
+                                summary: 'An AI agent senses, decides, and acts to reach a goal. It uses <em>sensors</em> to perceive and <em>actuators</em> to perform actions. These points match the questions you\'ll play.',
+                                examples: ['Chatbot assistant', 'Self-driving car'],
+                                details: `
+                                    <h5>Define</h5>
+                                    <p>An AI agent senses its environment, makes decisions, and takes actions to achieve a goal.</p>
+                                    <ul>
+                                        <li><strong>Sensors:</strong> camera, microphone</li>
+                                        <li><strong>Actuators:</strong> robot arms, wheels</li>
+                                        <li><strong>Goal:</strong> desired outcome</li>
+                                    </ul>
+                                    <h5>Use</h5>
+                                    <ul>
+                                        <li>Online shopping recommendations</li>
+                                        <li>Chatbots and virtual assistants</li>
+                                        <li>Robotics and self-driving cars</li>
+                                    </ul>
+                                    <h5>Help</h5>
+                                    <ul>
+                                        <li>Personalized experiences</li>
+                                        <li>Safer automation</li>
+                                        <li>Faster problem-solving</li>
+                                    </ul>
+                                    <h5>Pros</h5>
+                                    <ul>
+                                        <li>Fast and efficient</li>
+                                        <li>Consistent performance</li>
+                                        <li>Can learn and improve</li>
+                                        <li>Versatile across industries</li>
+                                    </ul>
+                                    <h5>Cons</h5>
+                                    <ul>
+                                        <li>Can be expensive</li>
+                                        <li>Limited in new situations</li>
+                                        <li>Data-dependent</li>
+                                        <li>May replace human jobs</li>
+                                    </ul>
+                                    <h5>Examples</h5>
+                                    <ul>
+                                        <li>Simple reflex: Thermostat</li>
+                                        <li>Model-based: Robot vacuum</li>
+                                        <li>Goal-based: GPS navigation</li>
+                                        <li>Learning agent: Netflix recommendations</li>
+                                    </ul>
+                                    <h5>Real-Life Example: Self-driving car</h5>
+                                    <ul>
+                                        <li><strong>Sensors:</strong> cameras, LiDAR</li>
+                                        <li><strong>Actuators:</strong> steering, braking</li>
+                                        <li><strong>Decision-making:</strong> traffic analysis</li>
+                                        <li><strong>Goal:</strong> reach the destination safely</li>
+                                    </ul>
+                                `,
+                                            questions: [
+                                                { question: 'AI Agents sense tool?', options: ['Sensors','Dreams','Noise','Errors'], answer: 'Sensors', explanation: 'Agents perceive using sensors.' },
+                                                { question: 'AI Agents action tool?', options: ['Actuators','Pixels','Tweets','Notes'], answer: 'Actuators', explanation: 'Agents act using actuators.' },
+                                                { question: 'AI Agents main aim?', options: ['Goal','Chaos','Drift','Idle'], answer: 'Goal', explanation: 'Agents aim for a goal.' },
+                                                { question: 'AI Agents reflex example?', options: ['Thermostat','Spoon','Cloud','Printer'], answer: 'Thermostat', explanation: 'Thermostat is a reflex agent.' },
+                                                { question: 'AI Agents learn from?', options: ['Data','Magic','Luck','Noise'], answer: 'Data', explanation: 'Learning uses data.' },
+                                                { question: 'AI Agents example?', options: ['Chatbot','Stone','Paper','Spoon'], answer: 'Chatbot', explanation: 'Chatbot is an AI agent.' }
+                                            ]
+                            },
+                            sql: {
+                                summary: 'SQL (Structured Query Language) is used to communicate with databases. It helps create, manage, and retrieve data from relational databases through various commands.',
+                                examples: ['CREATE TABLE Students', 'SELECT * FROM Users', 'UPDATE Records SET Status'],
+                                details: `
+                                    <h5>1. Definition</h5>
+                                    <p>SQL (Structured Query Language) is a language used to communicate with databases. It helps us to create, manage, insert, update, delete, and retrieve data from relational databases.</p>
+                                    
+                                    <h5>2. SQL Commands</h5>
+                                    <p><strong>DDL (Data Definition Language):</strong> CREATE, ALTER, DROP, TRUNCATE</p>
+                                    <p><strong>DML (Data Manipulation Language):</strong> INSERT, UPDATE, DELETE</p>
+                                    <p><strong>DQL (Data Query Language):</strong> SELECT</p>
+                                    <p><strong>DCL (Data Control Language):</strong> GRANT, REVOKE</p>
+                                    <p><strong>TCL (Transaction Control Language):</strong> COMMIT, ROLLBACK, SAVEPOINT</p>
+                                    
+                                    <h5>3. Common Uses</h5>
+                                    <ul>
+                                        <li><strong>CREATE:</strong> Make new databases/tables</li>
+                                        <li><strong>INSERT:</strong> Add new data into tables</li>
+                                        <li><strong>UPDATE:</strong> Change existing data</li>
+                                        <li><strong>DELETE:</strong> Remove unwanted data</li>
+                                        <li><strong>SELECT:</strong> Retrieve specific data</li>
+                                        <li><strong>JOIN:</strong> Combine data from multiple tables</li>
+                                    </ul>
+                                    
+                                    <h5>4. Example Code</h5>
+                                    <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 12px;">
+-- Create a table
+CREATE TABLE Students (
+  StudentID INT PRIMARY KEY,
+  Name VARCHAR(50),
+  Age INT,
+  Grade CHAR(2)
+);
+
+-- Insert data
+INSERT INTO Students (StudentID, Name, Age, Grade)
+VALUES (1, 'Alice', 20, 'A');
+
+-- Select data
+SELECT Name, Age FROM Students WHERE Grade = 'A';
+                                    </pre>
+                                `,
+                                questions: [
+                                    { question: 'Which SQL command is used to create a new table?', options: ['INSERT','CREATE','SELECT','UPDATE'], answer: 'CREATE', explanation: 'CREATE is used to make a new table or database.' },
+                                    { question: 'Which SQL command retrieves data from a table?', options: ['SELECT','UPDATE','DELETE','DROP'], answer: 'SELECT', explanation: 'SELECT is the command for fetching (reading) data.' },
+                                    { question: 'Which command removes all rows but keeps the table structure?', options: ['DELETE','DROP','TRUNCATE','ALTER'], answer: 'TRUNCATE', explanation: 'TRUNCATE clears all records but keeps the table ready for new data.' },
+                                    { question: 'Which command is used to change data inside a table?', options: ['INSERT','UPDATE','SELECT','GRANT'], answer: 'UPDATE', explanation: 'UPDATE modifies existing data in the table.' },
+                                    { question: 'Which SQL command undoes changes in a transaction?', options: ['COMMIT','ROLLBACK','SAVEPOINT','REVOKE'], answer: 'ROLLBACK', explanation: 'ROLLBACK cancels the changes and returns the database to its previous state.' },
+                                    { question: 'Which SQL clause is used to filter data?', options: ['GROUP BY','WHERE','ORDER BY','HAVING'], answer: 'WHERE', explanation: 'WHERE is used to apply conditions and filter rows.' },
+                                    { question: 'Which SQL keyword is used to arrange results in ascending or descending order?', options: ['GROUP BY','ORDER BY','SORT','ARRANGE'], answer: 'ORDER BY', explanation: 'ORDER BY arranges data either in ascending (ASC) or descending (DESC) order.' },
+                                    { question: 'Which JOIN returns only the matching rows from both tables?', options: ['LEFT JOIN','RIGHT JOIN','INNER JOIN','FULL JOIN'], answer: 'INNER JOIN', explanation: 'INNER JOIN shows only rows that exist in both tables.' },
+                                    { question: 'Which command removes the entire table including its structure?', options: ['DELETE','DROP','TRUNCATE','REVOKE'], answer: 'DROP', explanation: 'DROP permanently deletes the table and its data.' },
+                                    { question: 'Which SQL command is used to give a user permission to access data?', options: ['INSERT','GRANT','REVOKE','SAVEPOINT'], answer: 'GRANT', explanation: 'GRANT is used to give privileges to users.' }
+                                ]
+                            },
+                            lawyer: {
+                                summary: 'Lawyers are legal professionals who provide advice, represent clients in legal matters, and help navigate the complex legal system. They work in various areas of law to ensure justice and protect rights.',
+                                examples: ['Criminal Defense Attorney', 'Corporate Lawyer', 'Family Law Attorney', 'Public Interest Lawyer'],
+                                details: `
+                                    <h5>1. What is a Lawyer?</h5>
+                                    <p>A lawyer is a legal professional who has studied law and is licensed to practice in a jurisdiction. Lawyers provide legal advice, represent clients in court, draft legal documents, and help people understand their rights and obligations under the law.</p>
+                                    
+                                    <h5>2. Types of Lawyers</h5>
+                                    <ul>
+                                        <li><strong>Criminal Defense Lawyers:</strong> Defend people accused of crimes</li>
+                                        <li><strong>Civil Rights Lawyers:</strong> Protect constitutional rights and freedoms</li>
+                                        <li><strong>Corporate Lawyers:</strong> Handle business legal matters</li>
+                                        <li><strong>Family Lawyers:</strong> Deal with divorce, custody, and family issues</li>
+                                        <li><strong>Personal Injury Lawyers:</strong> Help accident victims get compensation</li>
+                                        <li><strong>Environmental Lawyers:</strong> Work on environmental protection cases</li>
+                                        <li><strong>Immigration Lawyers:</strong> Help with visa and citizenship matters</li>
+                                        <li><strong>Tax Lawyers:</strong> Handle tax-related legal issues</li>
+                                    </ul>
+                                    
+                                    <h5>3. What Lawyers Do</h5>
+                                    <ul>
+                                        <li>Provide legal advice and counsel</li>
+                                        <li>Represent clients in courts and legal proceedings</li>
+                                        <li>Draft contracts, wills, and legal documents</li>
+                                        <li>Research laws and legal precedents</li>
+                                        <li>Negotiate settlements and agreements</li>
+                                        <li>Protect clients' rights and interests</li>
+                                    </ul>
+                                    
+                                    <h5>4. Indian Legal System</h5>
+                                    <ul>
+                                        <li><strong>Supreme Court:</strong> Highest court in India</li>
+                                        <li><strong>High Courts:</strong> State-level highest courts</li>
+                                        <li><strong>District Courts:</strong> Local trial courts</li>
+                                        <li><strong>Constitution:</strong> Supreme law of the land</li>
+                                        <li><strong>Bar Council:</strong> Regulates legal profession</li>
+                                    </ul>
+                                    
+                                    <h5>5. How to Become a Lawyer</h5>
+                                    <ul>
+                                        <li>Complete law degree (LLB or integrated course)</li>
+                                        <li>Pass bar examination</li>
+                                        <li>Get enrolled with Bar Council</li>
+                                        <li>Complete internship/training</li>
+                                        <li>Start practice or join law firm</li>
+                                    </ul>
+                                `,
+                                questions: [
+                                    { question: 'What is the main role of a lawyer?', options: ['To entertain people','To provide legal advice and representation','To sell products','To teach mathematics'], answer: 'To provide legal advice and representation', explanation: 'Lawyers are trained to provide legal counsel and represent clients in legal matters.' },
+                                    { question: 'Which type of lawyer defends people accused of crimes?', options: ['Family lawyer','Criminal defense lawyer','Tax lawyer','Environmental lawyer'], answer: 'Criminal defense lawyer', explanation: 'Criminal defense lawyers specialize in defending individuals charged with criminal offenses.' },
+                                    { question: 'What is the highest court in India?', options: ['High Court','District Court','Supreme Court','Sessions Court'], answer: 'Supreme Court', explanation: 'The Supreme Court of India is the highest judicial authority in the country.' },
+                                    { question: 'Which document is considered the supreme law of India?', options: ['Indian Penal Code','Constitution of India','Civil Procedure Code','Companies Act'], answer: 'Constitution of India', explanation: 'The Constitution of India is the supreme law that governs the country and all other laws must conform to it.' },
+                                    { question: 'What degree is required to become a lawyer in India?', options: ['MBA','LLB','MBBS','B.Tech'], answer: 'LLB', explanation: 'LLB (Bachelor of Laws) or an integrated law degree is required to practice law in India.' },
+                                    { question: 'Which organization regulates the legal profession in India?', options: ['Bar Council','Medical Council','Engineering Council','Teaching Council'], answer: 'Bar Council', explanation: 'The Bar Council of India regulates legal education and the legal profession in India.' },
+                                    { question: 'What type of lawyer handles business legal matters?', options: ['Family lawyer','Corporate lawyer','Criminal lawyer','Immigration lawyer'], answer: 'Corporate lawyer', explanation: 'Corporate lawyers specialize in business law, including contracts, mergers, and corporate governance.' },
+                                    { question: 'In a court case, what is the person who files the case called?', options: ['Defendant','Plaintiff','Witness','Judge'], answer: 'Plaintiff', explanation: 'The plaintiff is the person who initiates a lawsuit by filing a complaint against another party.' },
+                                    { question: 'What is the term for a lawyer who represents clients without charge?', options: ['Pro bono lawyer','Corporate lawyer','Retainer lawyer','Commercial lawyer'], answer: 'Pro bono lawyer', explanation: 'Pro bono refers to legal services provided voluntarily and without payment, typically for the public good.' },
+                                    { question: 'Which type of lawyer helps with visa and citizenship issues?', options: ['Tax lawyer','Immigration lawyer','Family lawyer','Criminal lawyer'], answer: 'Immigration lawyer', explanation: 'Immigration lawyers specialize in immigration law, helping clients with visas, citizenship, and deportation issues.' }
+                                ]
+                            },
+                            python: {
+                                summary: 'Python is a high-level, interpreted programming language known for its simplicity and versatility. It is widely used in web development, data science, AI, automation, and more.',
+                                examples: ['print("Hello World")', 'if x > 5: print("Greater")', 'for i in range(10): print(i)', 'def function_name(): return value'],
+                                details: `
+                                    <h5>1. What is Python?</h5>
+                                    <p>Python is a high-level, interpreted programming language created by Guido van Rossum in 1991. It emphasizes code readability and simplicity, making it perfect for beginners and professionals alike.</p>
+                                    
+                                    <h5>2. Key Features</h5>
+                                    <ul>
+                                        <li><strong>Easy to Learn:</strong> Simple, readable syntax</li>
+                                        <li><strong>Interpreted:</strong> No compilation needed</li>
+                                        <li><strong>Cross-platform:</strong> Runs on Windows, Mac, Linux</li>
+                                        <li><strong>Open Source:</strong> Free to use and modify</li>
+                                        <li><strong>Large Community:</strong> Extensive libraries and support</li>
+                                        <li><strong>Versatile:</strong> Used in many domains</li>
+                                    </ul>
+                                    
+                                    <h5>3. Common Applications</h5>
+                                    <ul>
+                                        <li><strong>Web Development:</strong> Django, Flask frameworks</li>
+                                        <li><strong>Data Science:</strong> Pandas, NumPy, Matplotlib</li>
+                                        <li><strong>AI/Machine Learning:</strong> TensorFlow, PyTorch</li>
+                                        <li><strong>Automation:</strong> Scripts for repetitive tasks</li>
+                                        <li><strong>Game Development:</strong> Pygame library</li>
+                                        <li><strong>Desktop Applications:</strong> Tkinter, PyQt</li>
+                                    </ul>
+                                    
+                                    <h5>4. Basic Syntax Examples</h5>
+                                    <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 12px;">
+# Variables
+name = "Alice"
+age = 25
+
+# Control structures
+if age >= 18:
+    print("Adult")
+else:
+    print("Minor")
+
+# Loops
+for i in range(5):
+    print(f"Number: {i}")
+
+# Functions
+def greet(name):
+    return f"Hello, {name}!"
+                                    </pre>
+                                `,
+                                questions: [
+                                    { question: 'Who created Python programming language?', options: ['Guido van Rossum','Bill Gates','Mark Zuckerberg','Elon Musk'], answer: 'Guido van Rossum', explanation: 'Python was created by Guido van Rossum in 1991.' },
+                                    { question: 'What type of language is Python?', options: ['Interpreted','Compiled','Assembly','Machine'], answer: 'Interpreted', explanation: 'Python is an interpreted language, meaning code is executed line by line without compilation.' },
+                                    { question: 'Which Python framework is popular for web development?', options: ['Django','Photoshop','Excel','PowerPoint'], answer: 'Django', explanation: 'Django is a popular Python web framework for building web applications.' },
+                                    { question: 'What is the correct way to print in Python?', options: ['print("Hello")','echo "Hello"','console.log("Hello")','System.out.println("Hello")'], answer: 'print("Hello")', explanation: 'In Python, we use print() function to display output.' },
+                                    { question: 'Which library is commonly used for data analysis in Python?', options: ['Pandas','jQuery','Bootstrap','React'], answer: 'Pandas', explanation: 'Pandas is a powerful Python library for data manipulation and analysis.' },
+                                    { question: 'What does "len()" function do in Python?', options: ['Returns length','Deletes items','Sorts list','Creates loop'], answer: 'Returns length', explanation: 'The len() function returns the number of items in an object.' },
+                                    { question: 'Which symbol is used for comments in Python?', options: ['#','//','/* */','--'], answer: '#', explanation: 'Python uses # symbol for single-line comments.' },
+                                    { question: 'What is the correct way to define a function in Python?', options: ['def function_name():','function function_name()','func function_name()','create function_name()'], answer: 'def function_name():', explanation: 'Python uses "def" keyword to define functions.' },
+                                    { question: 'Which Python library is used for machine learning?', options: ['TensorFlow','Word','Excel','PowerPoint'], answer: 'TensorFlow', explanation: 'TensorFlow is a popular Python library for machine learning and AI.' },
+                                    { question: 'What is the file extension for Python files?', options: ['.py','.txt','.html','.js'], answer: '.py', explanation: 'Python files use .py extension.' }
+                                ]
+                            },
+                            cybersecurity: {
+                                summary: 'Cybersecurity protects digital systems, networks, and data from cyber threats. It involves preventing, detecting, and responding to cyber attacks to ensure information security.',
+                                examples: ['Password Protection', 'Firewall Setup', 'Antivirus Software', 'Two-Factor Authentication'],
+                                details: `
+                                    <h5>1. What is Cybersecurity?</h5>
+                                    <p>Cybersecurity is the practice of protecting digital systems, networks, programs, and data from cyber attacks. It aims to ensure confidentiality, integrity, and availability of information.</p>
+                                    
+                                    <h5>2. Types of Cyber Threats</h5>
+                                    <ul>
+                                        <li><strong>Malware:</strong> Viruses, trojans, ransomware</li>
+                                        <li><strong>Phishing:</strong> Fraudulent emails to steal data</li>
+                                        <li><strong>Social Engineering:</strong> Manipulating people for information</li>
+                                        <li><strong>DDoS Attacks:</strong> Overwhelming systems with traffic</li>
+                                        <li><strong>Data Breaches:</strong> Unauthorized access to sensitive data</li>
+                                        <li><strong>Identity Theft:</strong> Stealing personal information</li>
+                                    </ul>
+                                    
+                                    <h5>3. Security Best Practices</h5>
+                                    <ul>
+                                        <li>Use strong, unique passwords</li>
+                                        <li>Enable two-factor authentication</li>
+                                        <li>Keep software updated</li>
+                                        <li>Use reputable antivirus software</li>
+                                        <li>Be cautious with email attachments</li>
+                                        <li>Regular data backups</li>
+                                        <li>Secure Wi-Fi networks</li>
+                                    </ul>
+                                    
+                                    <h5>4. Career Opportunities</h5>
+                                    <ul>
+                                        <li><strong>Security Analyst:</strong> Monitor and protect systems</li>
+                                        <li><strong>Ethical Hacker:</strong> Test system vulnerabilities</li>
+                                        <li><strong>Security Architect:</strong> Design secure systems</li>
+                                        <li><strong>Incident Responder:</strong> Handle security breaches</li>
+                                        <li><strong>Compliance Officer:</strong> Ensure regulatory compliance</li>
+                                    </ul>
+                                `,
+                                questions: [
+                                    { question: 'What does cybersecurity primarily protect?', options: ['Digital systems','Physical buildings','Paper documents','Telephone calls'], answer: 'Digital systems', explanation: 'Cybersecurity focuses on protecting digital systems, networks, and data from cyber threats.' },
+                                    { question: 'What is phishing?', options: ['Fraudulent emails','Catching fish','Computer virus','Hardware failure'], answer: 'Fraudulent emails', explanation: 'Phishing involves sending fraudulent emails to trick people into sharing sensitive information.' },
+                                    { question: 'What is two-factor authentication?', options: ['Extra security layer','Password manager','Antivirus software','Firewall rule'], answer: 'Extra security layer', explanation: 'Two-factor authentication adds an extra security step beyond just username and password.' },
+                                    { question: 'What is malware?', options: ['Malicious software','Hardware component','Network cable','Security tool'], answer: 'Malicious software', explanation: 'Malware is malicious software designed to harm, disrupt, or gain unauthorized access to systems.' },
+                                    { question: 'What does DDoS attack do?', options: ['Overwhelms systems','Protects data','Encrypts files','Updates software'], answer: 'Overwhelms systems', explanation: 'DDoS (Distributed Denial of Service) attacks overwhelm systems with excessive traffic.' },
+                                    { question: 'What is the purpose of a firewall?', options: ['Block unauthorized access','Speed up internet','Store passwords','Create backups'], answer: 'Block unauthorized access', explanation: 'Firewalls monitor and control network traffic to block unauthorized access.' },
+                                    { question: 'What is ransomware?', options: ['Malware that encrypts data','Password manager','Security scanner','Backup software'], answer: 'Malware that encrypts data', explanation: 'Ransomware encrypts user data and demands payment for the decryption key.' },
+                                    { question: 'What is social engineering in cybersecurity?', options: ['Manipulating people','Building networks','Writing code','Installing software'], answer: 'Manipulating people', explanation: 'Social engineering involves manipulating people to divulge confidential information.' },
+                                    { question: 'What is an ethical hacker?', options: ['Tests system security','Breaks into systems illegally','Sells stolen data','Creates viruses'], answer: 'Tests system security', explanation: 'Ethical hackers legally test systems to find vulnerabilities and improve security.' },
+                                    { question: 'What should you do with software updates?', options: ['Install them regularly','Ignore them','Delete them','Share them'], answer: 'Install them regularly', explanation: 'Regular software updates patch security vulnerabilities and improve protection.' }
+                                ]
+                            },
+                            digitalMarketing: {
+                                summary: 'Digital marketing promotes products and services using digital channels like social media, search engines, email, and websites to reach and engage target audiences.',
+                                examples: ['Social Media Ads', 'Google Search Ads', 'Email Campaigns', 'Content Marketing'],
+                                details: `
+                                    <h5>1. What is Digital Marketing?</h5>
+                                    <p>Digital marketing is the promotion of products or services using digital technologies and channels to reach consumers. It includes all marketing efforts that use electronic devices or the internet.</p>
+                                    
+                                    <h5>2. Key Digital Marketing Channels</h5>
+                                    <ul>
+                                        <li><strong>Social Media Marketing:</strong> Facebook, Instagram, Twitter, LinkedIn</li>
+                                        <li><strong>Search Engine Marketing:</strong> Google Ads, Bing Ads</li>
+                                        <li><strong>Search Engine Optimization (SEO):</strong> Organic search rankings</li>
+                                        <li><strong>Email Marketing:</strong> Newsletters, promotional emails</li>
+                                        <li><strong>Content Marketing:</strong> Blogs, videos, infographics</li>
+                                        <li><strong>Affiliate Marketing:</strong> Partner-based promotions</li>
+                                        <li><strong>Influencer Marketing:</strong> Collaborations with influencers</li>
+                                    </ul>
+                                    
+                                    <h5>3. Benefits of Digital Marketing</h5>
+                                    <ul>
+                                        <li>Global reach and accessibility</li>
+                                        <li>Cost-effective compared to traditional marketing</li>
+                                        <li>Measurable results and analytics</li>
+                                        <li>Targeted audience segmentation</li>
+                                        <li>Real-time campaign adjustments</li>
+                                        <li>Higher engagement rates</li>
+                                    </ul>
+                                    
+                                    <h5>4. Important Metrics</h5>
+                                    <ul>
+                                        <li><strong>CTR:</strong> Click-Through Rate</li>
+                                        <li><strong>CPA:</strong> Cost Per Acquisition</li>
+                                        <li><strong>ROI:</strong> Return on Investment</li>
+                                        <li><strong>Conversion Rate:</strong> Percentage of visitors who take action</li>
+                                        <li><strong>Engagement Rate:</strong> Likes, shares, comments</li>
+                                    </ul>
+                                `,
+                                questions: [
+                                    { question: 'What is digital marketing?', options: ['Online promotion','Traditional advertising','Print media','Radio broadcasting'], answer: 'Online promotion', explanation: 'Digital marketing involves promoting products/services using digital channels and technologies.' },
+                                    { question: 'What does SEO stand for?', options: ['Search Engine Optimization','Social Event Organization','Software Engineering Online','Sales Executive Office'], answer: 'Search Engine Optimization', explanation: 'SEO is the practice of optimizing websites to rank higher in search engine results.' },
+                                    { question: 'Which platform is NOT typically used for social media marketing?', options: ['MS Excel','Facebook','Instagram','Twitter'], answer: 'MS Excel', explanation: 'Excel is a spreadsheet application, not a social media platform for marketing.' },
+                                    { question: 'What does CTR measure in digital marketing?', options: ['Click-Through Rate','Customer Total Revenue','Content Time Ratio','Call To Register'], answer: 'Click-Through Rate', explanation: 'CTR measures the percentage of people who click on an ad after seeing it.' },
+                                    { question: 'What is the main goal of content marketing?', options: ['Provide valuable content','Sell products directly','Collect email addresses','Increase website traffic'], answer: 'Provide valuable content', explanation: 'Content marketing focuses on creating valuable, relevant content to attract and engage audiences.' },
+                                    { question: 'What is email marketing primarily used for?', options: ['Communicate with customers','Store customer data','Process payments','Design websites'], answer: 'Communicate with customers', explanation: 'Email marketing is used to communicate directly with customers through newsletters and promotional emails.' },
+                                    { question: 'What does PPC stand for in digital advertising?', options: ['Pay-Per-Click','Public Private Company','Personal Profile Creation','Product Price Comparison'], answer: 'Pay-Per-Click', explanation: 'PPC is an advertising model where advertisers pay each time someone clicks their ad.' },
+                                    { question: 'Which metric measures the profitability of marketing campaigns?', options: ['ROI','URL','PDF','GPS'], answer: 'ROI', explanation: 'ROI (Return on Investment) measures the profitability and effectiveness of marketing campaigns.' },
+                                    { question: 'What is influencer marketing?', options: ['Collaborating with popular people','Traditional TV advertising','Print media campaigns','Radio sponsorships'], answer: 'Collaborating with popular people', explanation: 'Influencer marketing involves partnering with social media influencers to promote products.' },
+                                    { question: 'What is the main advantage of digital marketing over traditional marketing?', options: ['Measurable results','Higher costs','Limited reach','Slower results'], answer: 'Measurable results', explanation: 'Digital marketing provides detailed analytics and measurable results, unlike traditional marketing.' }
+                                ]
+                            },
+                            dataScience: {
+                                summary: 'Data Science combines statistics, programming, and domain expertise to extract insights from data. It involves collecting, analyzing, and interpreting large datasets to solve real-world problems.',
+                                examples: ['Netflix Recommendations', 'Weather Predictions', 'Fraud Detection', 'Medical Diagnosis'],
+                                details: `
+                                    <h5>1. What is Data Science?</h5>
+                                    <p>Data Science is an interdisciplinary field that uses scientific methods, processes, algorithms, and systems to extract knowledge and insights from structured and unstructured data.</p>
+                                    
+                                    <h5>2. Key Components</h5>
+                                    <ul>
+                                        <li><strong>Statistics:</strong> Mathematical analysis of data</li>
+                                        <li><strong>Programming:</strong> Python, R, SQL for data manipulation</li>
+                                        <li><strong>Machine Learning:</strong> Algorithms that learn from data</li>
+                                        <li><strong>Data Visualization:</strong> Charts, graphs, dashboards</li>
+                                        <li><strong>Domain Expertise:</strong> Understanding the business context</li>
+                                        <li><strong>Big Data Tools:</strong> Hadoop, Spark for large datasets</li>
+                                    </ul>
+                                    
+                                    <h5>3. Data Science Process</h5>
+                                    <ul>
+                                        <li><strong>Data Collection:</strong> Gathering relevant data</li>
+                                        <li><strong>Data Cleaning:</strong> Removing errors and inconsistencies</li>
+                                        <li><strong>Exploratory Analysis:</strong> Understanding data patterns</li>
+                                        <li><strong>Model Building:</strong> Creating predictive models</li>
+                                        <li><strong>Model Evaluation:</strong> Testing model accuracy</li>
+                                        <li><strong>Deployment:</strong> Implementing solutions</li>
+                                    </ul>
+                                    
+                                    <h5>4. Real-World Applications</h5>
+                                    <ul>
+                                        <li><strong>Healthcare:</strong> Disease prediction, drug discovery</li>
+                                        <li><strong>Finance:</strong> Fraud detection, risk assessment</li>
+                                        <li><strong>Retail:</strong> Recommendation systems, inventory management</li>
+                                        <li><strong>Transportation:</strong> Route optimization, autonomous vehicles</li>
+                                        <li><strong>Entertainment:</strong> Content recommendations, audience analysis</li>
+                                    </ul>
+                                `,
+                                questions: [
+                                    { question: 'What is the main goal of data science?', options: ['Extract insights from data','Create websites','Design graphics','Write documents'], answer: 'Extract insights from data', explanation: 'Data science aims to extract meaningful insights and knowledge from data to solve problems.' },
+                                    { question: 'Which programming language is most popular in data science?', options: ['Python','HTML','CSS','JavaScript'], answer: 'Python', explanation: 'Python is widely used in data science due to its powerful libraries like Pandas, NumPy, and Scikit-learn.' },
+                                    { question: 'What is machine learning?', options: ['Algorithms that learn from data','Computer hardware','Internet connection','Software installation'], answer: 'Algorithms that learn from data', explanation: 'Machine learning involves algorithms that can learn patterns from data and make predictions.' },
+                                    { question: 'What does data visualization help with?', options: ['Understanding data patterns','Storing data','Deleting data','Copying data'], answer: 'Understanding data patterns', explanation: 'Data visualization uses charts and graphs to help people understand data patterns and insights.' },
+                                    { question: 'What is big data?', options: ['Large datasets','Small files','Simple calculations','Basic programs'], answer: 'Large datasets', explanation: 'Big data refers to extremely large datasets that require special tools and techniques to process.' },
+                                    { question: 'What is the first step in the data science process?', options: ['Data collection','Model deployment','Data visualization','Report writing'], answer: 'Data collection', explanation: 'Data collection is the first step where relevant data is gathered for analysis.' },
+                                    { question: 'What is data cleaning?', options: ['Removing errors from data','Washing computers','Deleting files','Installing software'], answer: 'Removing errors from data', explanation: 'Data cleaning involves removing errors, duplicates, and inconsistencies from datasets.' },
+                                    { question: 'Which tool is commonly used for big data processing?', options: ['Hadoop','Notepad','Calculator','Paint'], answer: 'Hadoop', explanation: 'Hadoop is a popular framework for processing and storing large datasets across clusters of computers.' },
+                                    { question: 'What does a data scientist need besides technical skills?', options: ['Domain expertise','Cooking skills','Driving license','Art degree'], answer: 'Domain expertise', explanation: 'Data scientists need domain expertise to understand the business context and ask the right questions.' },
+                                    { question: 'How does Netflix use data science?', options: ['Recommendation system','Video storage','Internet connection','Device manufacturing'], answer: 'Recommendation system', explanation: 'Netflix uses data science to analyze viewing patterns and recommend content to users.' }
+                                ]
+                            }
+                        };
+
+        // Keep existing answer cards compact by reducing multi-word legacy choices
+        // to their first distinct word. Mira's bank already satisfies this format.
+        for (const topicData of Object.values(topics)) {
+          if (!Array.isArray(topicData.questions)) continue;
+          topicData.questions = topicData.questions.map(question => {
+            const shorten = value => String(value).trim().match(/[A-Za-z0-9]+/)?.[0] || String(value).trim();
+            const options = question.options.map(shorten);
+            const answer = shorten(question.answer);
+            return new Set(options).size === 4 && options.includes(answer) ? {...question, options, answer} : question;
+          });
+        }
+
+        // Dynamic question bank from Mira. It is validated before it is stored;
+        // the existing built-in topics remain the offline fallback.
+        try {
+          const dynamicQuestions = JSON.parse(sessionStorage.getItem('aiplay_dynamic_questions') || 'null');
+          if (Array.isArray(dynamicQuestions) && dynamicQuestions.length >= 9 && dynamicQuestions.every(q => q && typeof q.question === 'string' && Array.isArray(q.options) && q.options.length === 4 && q.options.includes(q.answer))) {
+            topics.dynamic = { summary: 'Mira prepared this personalised question set for your lesson.', examples: ['Read the question carefully.', 'Use the explanation after each answer.'], questions: dynamicQuestions };
+          }
+        } catch (error) { console.warn('Unable to load personalised questions.', error); }
+
+        const GAME1_COUNT = 3; // Bubble Pop asks first 3
+
+    let selectedTopic = null;
+    let qIndex = 0;
+    let score1 = 0;
+    let locked = false;
+    let bubbles = [];
+    let activeBubbles = 0;
+
+        // Topic overlay wiring
+        const overlay = document.getElementById('topicOverlay');
+    const startBtn = document.getElementById('startGameBtn');
+        const topicBtns = Array.from(document.querySelectorAll('.topic-btn'));
+        const summaryBox = document.getElementById('topicSummary');
+        const summaryTitle = document.getElementById('summaryTitle');
+        const summaryText = document.getElementById('summaryText');
+        const examplesList = document.getElementById('examplesList');
+    const qaPreview = document.getElementById('qaPreview');
+    const qaItems = document.getElementById('qaItems');
+    const detailBox = document.getElementById('detailBox');
+    const howTo = document.getElementById('howToModal');
+    const bubbleStartBtn = document.getElementById('bubbleStartBtn');
+
+        topicBtns.forEach(btn => btn.addEventListener('click', () => {
+          const key = btn.dataset.topic;
+          selectedTopic = key;
+          topicBtns.forEach(b => b.style.outline = '');
+          btn.style.outline = '3px solid #1b3b5a';
+          const t = topics[key];
+          summaryTitle.textContent = key === 'maths' ? 'Math' : 'AI Agents';
+          summaryText.textContent = t.summary;
+          examplesList.innerHTML = '';
+          t.examples.slice(0,2).forEach(e => {
+            const li = document.createElement('li');
+            li.textContent = e;
+            examplesList.appendChild(li);
+          });
+          summaryBox.style.display = 'block';
+                    // Q&A preview: show first 3 with their correct one-word answers
+                    qaItems.innerHTML = '';
+                    t.questions.slice(0,3).forEach((q, i) => {
+                        const div = document.createElement('div');
+                        div.className = 'qa-item';
+                        div.innerHTML = `<strong>Q${i+1}:</strong> ${q.question} — <strong>Ans:</strong> ${q.answer}`;
+                        qaItems.appendChild(div);
+                    });
+                                qaPreview.style.display = 'block';
+                                // Detailed structured section
+                                detailBox.innerHTML = t.details || '';
+                                detailBox.style.display = t.details ? 'block' : 'none';
+          startBtn.disabled = false;
+        }));
+
+                startBtn.addEventListener('click', () => {
+          if (!selectedTopic) return;
+          // Persist selection for Game 2
+          sessionStorage.setItem('aiplay_topic', selectedTopic);
+          sessionStorage.setItem('aiplay_game1Score', '0');
+          sessionStorage.setItem('aiplay_nextIndex', String(GAME1_COUNT));
+                    // Show how-to modal before starting
+                    howTo.style.display = 'flex';
+        });
+
+                bubbleStartBtn.addEventListener('click', () => {
+                    howTo.style.display = 'none';
+                    overlay.style.display = 'none';
+                    startBubbleQuiz();
+                });
+
+        function startBubbleQuiz() {
+          score1 = 0;
+          qIndex = 0;
+          nextQuestion();
+        }
+
+        function clearBubbles() {
+                    bubbles.forEach(b => b.remove());
+                    bubbles = [];
+                    activeBubbles = 0;
+        }
+
+        function nextQuestion() {
+          clearBubbles();
+          locked = false;
+          if (qIndex >= GAME1_COUNT) {
+            // Save and go to Rocket game
+            sessionStorage.setItem('aiplay_game1Score', String(score1));
+            sessionStorage.setItem('aiplay_nextIndex', String(GAME1_COUNT));
+            // small delay for smoothness
+            setTimeout(() => { window.location.href = 'game1.html'; }, 450);
+            return;
+          }
+          const t = topics[selectedTopic];
+          const q = t.questions[qIndex];
+          document.getElementById('problem').textContent = q.question;
+          spawnOptionBubbles(q);
+        }
+
+                function spawnOptionBubbles(q) {
+          const container = document.getElementById('gameContainer');
+          const positionsPct = [12, 36, 60, 84]; // fixed order: do not shuffle
+                    activeBubbles = 0;
+                    q.options.forEach((opt, i) => {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = opt;
+            bubble.style.left = `calc(${positionsPct[i]}vw - 40px)`; // center approx for 80px bubble
+                        const duration = 14; // slower float speed
+            bubble.style.setProperty('--drift', '0px');
+            bubble.style.setProperty('--wobble', '0deg');
+            bubble.style.animation = `floatUp ${duration}s linear forwards`;
+            bubble.dataset.value = opt;
+            container.appendChild(bubble);
+            bubbles.push(bubble);
+                        activeBubbles++;
+            bubble.addEventListener('click', onBubbleClick);
+            bubble.addEventListener('touchstart', (e) => { e.preventDefault(); onBubbleClick({ currentTarget: bubble }); });
+                        // If bubble floats away and no answer chosen, count down and respawn set
+                        bubble.addEventListener('animationend', () => {
+                            // Remove if still present to avoid accumulation
+                            if (bubble.parentNode) bubble.remove();
+                            bubbles = bubbles.filter(b => b !== bubble);
+                            activeBubbles = Math.max(0, activeBubbles - 1);
+                            if (activeBubbles === 0 && !locked) {
+                                // Respawn same question after brief pause
+                                setTimeout(() => {
+                                    if (!locked) {
+                                        spawnOptionBubbles(q);
+                                    }
+                                }, 300);
+                            }
+                        });
+          });
+        }
+
+        // Game sounds
+        function playBubblePop() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+        
+        function playCorrectSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+        
+        function playWrongSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(250, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function onBubbleClick(e) {
+          if (locked) return;
+          locked = true;
+          const bubble = e.currentTarget;
+          const val = bubble.dataset.value;
+          const t = topics[selectedTopic];
+          const q = t.questions[qIndex];
+          const correct = (val === q.answer);
+          
+          // Play sounds
+          try {
+            playBubblePop();
+            setTimeout(() => {
+              if (correct) {
+                playCorrectSound();
+              } else {
+                playWrongSound();
+              }
+            }, 150);
+          } catch (e) {
+            console.log('Audio not supported');
+          }
+          
+          // mark
+          const mark = document.createElement('div');
+          mark.textContent = correct ? '✓' : '✗';
+          mark.className = correct ? 'checkmark' : 'cross';
+          mark.style.left = (bubble.offsetLeft + 30) + 'px';
+          mark.style.top = (bubble.offsetTop + 30) + 'px';
+          document.getElementById('gameContainer').appendChild(mark);
+          bubble.classList.add('popped');
+          if (correct) { score1 += 1; }
+          setTimeout(() => {
+            mark.remove();
+                        // Clear any remaining bubbles of this question
+                        clearBubbles();
+            qIndex += 1;
+            nextQuestion();
+          }, 600);
+        }
+
+        // Initialize (overlay shown by default)
+        window.addEventListener('load', () => {
+          // Aiplay assistant can preselect one of the existing, validated game topics.
+          // Standard direct visits still begin with a fresh topic selection.
+          const assistantTopic = sessionStorage.getItem('aiplay_assistant_launch');
+          if (assistantTopic === 'dynamic' && topics.dynamic) {
+            sessionStorage.removeItem('aiplay_assistant_launch');
+            selectedTopic = 'dynamic';
+            summaryTitle.textContent = 'Mira’s lesson game';
+            summaryText.textContent = topics.dynamic.summary;
+            examplesList.innerHTML = '';
+            topics.dynamic.examples.forEach(example => { const li = document.createElement('li'); li.textContent = example; examplesList.appendChild(li); });
+            qaItems.innerHTML = '';
+            topics.dynamic.questions.slice(0, 3).forEach((question, index) => { const item = document.createElement('div'); item.className = 'qa-item'; item.textContent = `Q${index + 1}: ${question.question}`; qaItems.appendChild(item); });
+            summaryBox.style.display = 'block';
+            qaPreview.style.display = 'block';
+            startBtn.disabled = false;
+          } else if (assistantTopic && topics[assistantTopic]) {
+            sessionStorage.removeItem('aiplay_assistant_launch');
+            const matchingButton = document.querySelector(`.topic-btn[data-topic="${assistantTopic}"]`);
+            if (matchingButton) matchingButton.click();
+          } else {
+            sessionStorage.removeItem('aiplay_topic');
+            sessionStorage.removeItem('aiplay_game1Score');
+            sessionStorage.removeItem('aiplay_nextIndex');
+          }
+        });
+
+        // ENHANCED MOBILE DETECTION SYSTEM
+        function detectMobileDevice() {
+            const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isSmallScreen = window.innerWidth <= 768;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobileScreen = window.innerWidth < 1024; // More accurate mobile detection
+            
+            return {
+                isMobile: isMobileUA || (isTouchDevice && isSmallScreen) || isMobileScreen,
+                isTouch: isTouchDevice,
+                isPortrait: isPortrait,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                deviceType: isMobileUA || isMobileScreen ? 'mobile' : 'desktop'
+            };
+        }
+
+        // AUTO-DETECT AND APPLY APPROPRIATE VERSION
+        function initializeMobileOptimization() {
+            const deviceInfo = detectMobileDevice();
+            
+            // Clear any existing classes
+            document.body.classList.remove('mobile-version', 'web-version', 'mobile-detected');
+            
+            // Apply appropriate version based on detection
+            if (deviceInfo.isMobile) {
+                document.body.classList.add('mobile-version', 'mobile-detected');
+                console.log(`📱 MOBILE DETECTED - Instagram Reel Format Applied (${deviceInfo.screenWidth}x${deviceInfo.screenHeight})`);
+            } else {
+                document.body.classList.add('web-version');
+                console.log(`🖥️ DESKTOP DETECTED - Full Desktop Design Applied (${deviceInfo.screenWidth}x${deviceInfo.screenHeight})`);
+            }
+        }
+
+        // Auto-detection only - no toggle functionality needed
+
+        // AUTO-INITIALIZE ON PAGE LOAD
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileOptimization();
+            adjustCanvasForMobile();
+        });
+
+        // RESPONSIVE CANVAS ADJUSTMENT
+        function adjustCanvasForMobile() {
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                const deviceInfo = detectMobileDevice();
+                const isMobile = document.body.classList.contains('mobile-version');
+                const isWeb = document.body.classList.contains('web-version');
+                
+                if (isMobile) {
+                    // Mobile full-screen
+                    canvas.style.width = '100vw';
+                    canvas.style.height = '100vh';
+                    canvas.style.position = 'fixed';
+                    canvas.style.top = '0';
+                    canvas.style.left = '0';
+                } else if (isWeb) {
+                    // Desktop full-screen
+                    canvas.style.width = '100vw';
+                    canvas.style.height = '100vh';
+                    canvas.style.position = 'fixed';
+                    canvas.style.top = '0';
+                    canvas.style.left = '0';
+                }
+            }
+        }
+
+        // WINDOW RESIZE HANDLER
+        window.addEventListener('resize', function() {
+            adjustCanvasForMobile();
+        });
+
+        // TOUCH OPTIMIZATION
+        document.addEventListener('touchstart', function(e) {
+            // Prevent default touch behaviors that might interfere
+        }, { passive: false });
+
+    </script>
+</body>
+</html>

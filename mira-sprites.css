@@ -1,0 +1,11 @@
+.mira-sprite{--sprite-row:0%;display:inline-block;width:var(--mira-size,100px);height:var(--mira-size,100px);flex:none;background-size:400% 400%;background-repeat:no-repeat;background-position:0 var(--sprite-row);animation:mira-blink 5.2s step-end infinite;isolation:isolate}
+.mira-sprite[data-agent=teacher]{background-image:url('assets/mira/teacher-sheet.png')}
+.mira-sprite[data-agent=exam]{background-image:url('assets/mira/exam-sheet.png')}
+.mira-sprite[data-agent=scientist]{background-image:url('assets/mira/scientist-sheet.png')}
+.mira-sprite[data-state=thinking]{--sprite-row:33.333333%;animation:mira-action 2.6s step-end infinite}
+.mira-sprite[data-state=speaking]{--sprite-row:66.666667%;animation:mira-action 2s step-end infinite}
+.mira-sprite[data-state=celebrating]{--sprite-row:100%;animation:mira-action 2.2s step-end infinite}
+.mira-sprite[data-static=true]{animation:none}
+@keyframes mira-blink{0%,76%,100%{background-position:0 var(--sprite-row)}80%{background-position:33.333333% var(--sprite-row)}84%{background-position:66.666667% var(--sprite-row)}88%{background-position:100% var(--sprite-row)}}
+@keyframes mira-action{0%,100%{background-position:0 var(--sprite-row)}25%{background-position:33.333333% var(--sprite-row)}50%{background-position:66.666667% var(--sprite-row)}75%{background-position:100% var(--sprite-row)}}
+@media(prefers-reduced-motion:reduce){.mira-sprite{animation:none!important}}

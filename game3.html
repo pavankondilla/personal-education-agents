@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aiplay – Fishing Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Nunito:wght@400;700&display=swap');
+        
+        :root {
+            --sky-blue: #87CEEB;
+            --dark-blue: #1c273a;
+            --water-blue: #4169E1;
+            --water-light: #1E90FF;
+            --water-dark: #191970;
+            --correct-green: #4CAF50;
+            --correct-blue: #2196F3;
+            --wrong-red: #F44336;
+            --accent-yellow: #ffcf54;
+            --white: #ffffff;
+            --gray: #cccccc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--sky-blue), var(--water-light));
+            font-family: 'Nunito', sans-serif;
+            color: var(--dark-blue);
+            overflow: hidden;
+            height: 100vh;
+            touch-action: none;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+
+        /* Mobile Detection and Auto-Optimization */
+        body.mobile-detected {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+        }
+        
+        /* REMOVED GAME HEADER - NOW USING SIDE SCORE PANEL */
+
+        /* Mobile/Web Toggle Button */
+        /* Toggle button removed - auto-detect mobile only */
+        
+        .game-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--dark-blue);
+            margin: 0;
+        }
+
+        .game-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .score-display {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--dark-blue);
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .question-display {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--dark-blue);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(76, 175, 80, 0.4);
+            max-width: 450px;
+            text-align: center;
+            z-index: 50;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.3;
+            opacity: 0.9;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .question-display.show {
+            animation: questionFadeIn 0.5s ease-out forwards;
+        }
+        
+        .question-display.hide {
+            animation: questionFadeOut 0.3s ease-in forwards;
+        }
+        
+        @keyframes questionFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%) scale(0.9);
+            }
+            to {
+                opacity: 0.9;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        @keyframes questionFadeOut {
+            from {
+                opacity: 0.9;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -40%) scale(0.95);
+            }
+        }
+        
+        /* Mobile responsive question display */
+        @media (max-width: 768px) {
+            .question-display {
+                top: 25%;
+                font-size: 1.1em;
+                padding: 12px 20px;
+                max-width: 85%;
+                border-radius: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .question-display {
+                top: 20%;
+                font-size: 1em;
+                padding: 10px 15px;
+                max-width: 90%;
+            }
+        }
+        
+        .game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--sky-blue), var(--water-light));
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            cursor: grab;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: transparent;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* MOBILE VERSION STYLES */
+        @media screen and (max-width: 768px), (pointer: coarse) {
+            body.mobile-version .game-header {
+                display: none !important; /* Hidden for Instagram Reel format */
+            }
+            
+            body.mobile-version .game-title {
+                font-size: 1.5em;
+            }
+            
+            body.mobile-version .score-display {
+                font-size: 1em;
+                padding: 6px 12px;
+                min-width: 70px;
+            }
+            
+            body.mobile-version canvas {
+                max-width: calc(100vw - 20px);
+                max-height: calc(100vh - 120px);
+                border-radius: 12px;
+                border-width: 2px;
+            }
+        }
+
+        /* FULL SCREEN MOBILE FORMAT - NO PANELS */
+        @media screen and (max-width: 768px) {
+            body.mobile-version {
+                position: fixed !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+                top: 0 !important;
+                left: 0 !important;
+                background: linear-gradient(135deg, var(--sky-blue), var(--water-light)) !important;
+            }
+            
+            body.mobile-version .game-container {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                overflow: hidden !important;
+                box-shadow: none !important;
+            }
+            
+            body.mobile-version canvas {
+                position: relative !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                border: none !important;
+                border-radius: 15px !important;
+                box-shadow: none !important;
+            }
+            
+            body.mobile-version .question-display {
+                position: fixed !important;
+                top: 10% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.1em !important;
+                padding: 12px 20px !important;
+                max-width: 85% !important;
+                border-radius: 15px !important;
+                backdrop-filter: blur(12px) !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+                border: 2px solid rgba(76, 175, 80, 0.5) !important;
+            }
+            
+            /* PC VERSION QUESTION DISPLAY - BLACK TEXT, BETTER DESIGN */
+            body.web-version .question-display {
+                position: fixed !important;
+                top: 8% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.8em !important;
+                padding: 25px 40px !important;
+                max-width: 70% !important;
+                border-radius: 25px !important;
+                background: rgba(255, 255, 255, 0.98) !important;
+                color: #000000 !important; /* BLACK TEXT FOR PC */
+                font-weight: bold !important;
+                text-shadow: none !important;
+                backdrop-filter: blur(20px) !important;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+                border: 4px solid rgba(30, 144, 255, 0.7) !important;
+                z-index: 1000 !important;
+                text-align: center !important;
+                line-height: 1.4 !important;
+                z-index: 100 !important;
+            }
+        }
+        
+        canvas:active {
+            cursor: grabbing;
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .start-button, .restart-button, .end-button {
+            padding: 15px 30px;
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--dark-blue);
+            background-color: var(--accent-yellow);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 0 #e5b93d;
+            transform: translateY(-2px);
+            transition: all 0.2s ease-in-out;
+            pointer-events: auto;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        .start-button:hover, .restart-button:hover, .end-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 7px 0 #e5b93d;
+        }
+
+        .start-button:active, .restart-button:active, .end-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 0 #e5b93d;
+        }
+
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .feedback-text {
+            font-size: 2.5em;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            padding: 16px 24px;
+            border-radius: 16px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: feedbackPop 2s ease-out forwards;
+            border: 3px solid;
+        }
+
+        .feedback-text.success {
+            color: var(--correct-green);
+            background: rgba(76, 175, 80, 0.1);
+            border-color: var(--correct-green);
+        }
+
+        .feedback-text.error {
+            color: var(--wrong-red);
+            background: rgba(244, 67, 54, 0.1);
+            border-color: var(--wrong-red);
+        }
+
+        @keyframes feedbackPop {
+            0% { transform: scale(0.5) translate(-50%, -50%); opacity: 0; }
+            20% { transform: scale(1.2) translate(-50%, -50%); opacity: 1; }
+            80% { transform: scale(1) translate(-50%, -50%); opacity: 1; }
+            100% { transform: scale(1) translate(-50%, -50%); opacity: 0; }
+        }
+
+        .instructions {
+            display: none !important; /* REMOVED - Full screen design only */
+        }
+
+        .fish-guide {
+            display: none !important; /* REMOVED - Full screen design only */
+        }
+
+        .fish-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--dark-blue);
+        }
+
+        .fish-icon {
+            width: 20px;
+            height: 12px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .fish-icon.correct { background: var(--correct-green); }
+        .fish-icon.correct-blue { background: var(--correct-blue); }
+        .fish-icon.wrong { background: var(--wrong-red); }
+
+        .score-panel {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            pointer-events: auto;
+        }
+
+        .score-panel h2 {
+            margin: 0 0 16px;
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark-blue);
+        }
+
+        .score-breakdown {
+            margin: 16px 0;
+            font-size: 1.1em;
+            color: var(--dark-blue);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .small-button {
+            font-size: 1em;
+            padding: 10px 16px;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 16px;
+            }
+
+            .game-title {
+                font-size: 1.4em;
+            }
+
+            .score-display, .question-display {
+                font-size: 1em;
+                padding: 6px 12px;
+            }
+
+            .question-display {
+                max-width: 280px;
+            }
+
+            canvas {
+                max-width: calc(100vw - 20px);
+                max-height: calc(100vh - 180px);
+            }
+
+            .feedback-text {
+                font-size: 2em;
+                padding: 12px 20px;
+            }
+
+            .instructions {
+                display: none !important; /* REMOVED - Mobile full screen */
+            }
+
+            .fish-guide {
+                display: none !important; /* REMOVED - Mobile full screen */
+            }
+        }
+
+        /* How-to modal */
+        #fishingHowTo {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 50;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-card {
+            width: min(92vw, 520px);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+            padding: 18px;
+            text-align: left;
+        }
+
+        .modal-card h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            color: #1b3b5a;
+        }
+
+        .modal-card p {
+            margin: 6px 0;
+            font-size: 14px;
+            color: #23465f;
+        }
+
+        .modal-list {
+            margin: 6px 0 0 18px;
+            padding: 0;
+            color: #23465f;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #ffcf54;
+            color: #1c273a;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* WEB VERSION STYLES - TRULY FULL SCREEN PC VERSION */
+        body.web-version {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--sky-blue), var(--water-light));
+            display: block;
+        }
+        
+        body.web-version .game-header {
+            display: none !important; /* REMOVED - No top panel for PC */
+        }
+        
+        body.web-version .game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--sky-blue), var(--water-light));
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+        }
+        
+        body.web-version canvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 1 !important;
+        }
+        
+        /* Header elements hidden for PC version - truly full-screen gaming */
+        body.web-version .game-title,
+        body.web-version .score-display {
+            display: none !important;
+        }
+        
+        body.web-version .question-display {
+            position: fixed !important;
+            top: 8% !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            font-size: 1.8em !important;
+            padding: 25px 40px !important;
+            max-width: 70% !important;
+            border-radius: 25px !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            color: #000000 !important; /* BLACK TEXT FOR PC */
+            font-weight: bold !important;
+            text-shadow: none !important;
+            backdrop-filter: blur(20px) !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+            border: 4px solid rgba(30, 144, 255, 0.7) !important;
+            z-index: 1000 !important;
+            text-align: center !important;
+            line-height: 1.4 !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle button removed - auto mobile detection -->
+    <div class="game-header">
+        <h1 class="game-title">🎣 Fishing Quiz</h1>
+        <div class="score-display">Score: <span id="score">0</span></div>
+    </div>
+    
+    <div class="game-container">
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+        <div class="question-display" id="questionDisplay">Get ready to fish!</div>
+        
+        <div class="ui-overlay" id="uiOverlay">
+            <button class="start-button" id="startBtn">Start Fishing</button>
+            <div class="score-panel" id="scorePanel" style="display:none;">
+                <h2>Final Score</h2>
+                <div class="score-breakdown" id="scoreBreakdown"></div>
+                <div class="button-row">
+                    <button class="restart-button" id="restartBtn">Play Again</button>
+                    <button class="end-button small-button" id="backBtn">Back to Topics</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feedback-overlay" id="feedbackOverlay" style="display:none;">
+            <div class="feedback-text" id="feedbackText"></div>
+        </div>
+        
+        <div class="instructions" id="instructions">
+            Drag the hook to catch the fish with the correct answer! Read the text inside each fish carefully.
+        </div>
+        
+        <div class="fish-guide">
+            <div class="fish-item">
+                <div class="fish-icon" style="background: linear-gradient(45deg, #FF6B35, #4ECDC4);"></div>
+                <span>4 Fish = 4 Answers</span>
+            </div>
+            <div class="fish-item">
+                <div class="fish-icon" style="background: #FFD700; color: #1c273a; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold;">ABC</div>
+                <span>Text Inside</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fishing How To Modal -->
+    <div id="fishingHowTo">
+        <div class="modal-card">
+            <h3>How to Play – Fishing Quiz</h3>
+            <ul class="modal-list">
+                <li>Drag the golden hook around the water to catch fish.</li>
+                <li>Each fish contains an answer option with white text.</li>
+                <li>Catch the fish that has the correct answer to the question.</li>
+                <li>Answer all 3 questions correctly to get maximum points!</li>
+            </ul>
+            <div class="modal-actions">
+                <button id="fishingStartBtn" class="modal-btn">Start Fishing Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game configuration
+        const gameConfig = {
+            canvasWidth: 900,
+            canvasHeight: 600,
+            waterLevel: 150,
+            fishColors: ["#FF6B35", "#4ECDC4", "#45B7D1", "#96CEB4"], // Orange, Teal, Blue, Green
+            fishCount: 4,
+            animations: {
+                waveSpeed: 0.02,
+                cloudSpeed: 0.3,
+                fishSpeed: 0.3,
+                hookSpeed: 3
+            }
+        };
+
+        class FishingQuiz {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.score = 0;
+                this.gameStarted = false;
+                this.gameTime = 0;
+                this.questionsAnswered = 0;
+                this.maxQuestions = 3; // 3 questions for consistency
+                
+                // Get session data
+                this.selectedTopic = sessionStorage.getItem('aiplay_topic') || 'maths';
+                this.game1Score = parseInt(sessionStorage.getItem('aiplay_game1Score'), 10) || 0;
+                this.game2Score = parseInt(sessionStorage.getItem('aiplay_game2Score'), 10) || 0;
+                this.nextIndex = parseInt(sessionStorage.getItem('aiplay_nextIndex'), 10) || 6;
+                
+                // Ensure score is updated
+                this.updateScore();
+                
+                // Load questions
+                this.loadTopics();
+                
+                // Game objects
+                this.initializeGameObjects();
+                this.setupEventHandlers();
+                
+                // Start animation loop
+                this.animate();
+                
+                // Show how-to modal
+                document.getElementById('fishingHowTo').style.display = 'flex';
+                
+                this.displayCurrentQuestion();
+            }
+            
+            loadTopics() {
+                this.topics = {
+                    maths: {
+                        questions: [
+                            { 
+                                question: 'Addition symbol?', 
+                                answer: '+',
+                                options: ['+', '−', '×', '÷']
+                            },
+                            { 
+                                question: 'Result of addition?', 
+                                answer: 'sum',
+                                options: ['sum', 'difference', 'product', 'quotient']
+                            },
+                            { 
+                                question: 'Subtraction symbol?', 
+                                answer: '−',
+                                options: ['−', '+', '×', '÷']
+                            },
+                            { 
+                                question: 'Result of subtraction?', 
+                                answer: 'difference',
+                                options: ['difference', 'sum', 'product', 'quotient']
+                            },
+                            { 
+                                question: '7+5=?', 
+                                answer: '12',
+                                options: ['12', '11', '13', '10']
+                            },
+                            { 
+                                question: '15−6=?', 
+                                answer: '9',
+                                options: ['9', '8', '10', '7']
+                            }
+                        ]
+                    },
+                    aiAgents: {
+                        questions: [
+                            { 
+                                question: 'AI Agents sense tool?', 
+                                answer: 'Sensors',
+                                options: ['Sensors', 'Motors', 'Cameras', 'Speakers']
+                            },
+                            { 
+                                question: 'AI Agents action tool?', 
+                                answer: 'Actuators',
+                                options: ['Actuators', 'Sensors', 'Memory', 'CPU']
+                            },
+                            { 
+                                question: 'AI Agents main aim?', 
+                                answer: 'Goal',
+                                options: ['Goal', 'Speed', 'Memory', 'Power']
+                            },
+                            { 
+                                question: 'AI Agents reflex example?', 
+                                answer: 'Thermostat',
+                                options: ['Thermostat', 'Calculator', 'Phone', 'TV']
+                            },
+                            { 
+                                question: 'AI Agents learn from?', 
+                                answer: 'Data',
+                                options: ['Data', 'Music', 'Images', 'Videos']
+                            },
+                            { 
+                                question: 'AI Agents example?', 
+                                answer: 'Chatbot',
+                                options: ['Chatbot', 'Car', 'Book', 'Pen']
+                            }
+                        ]
+                    },
+                    sql: {
+                        questions: [
+                            { 
+                                question: 'Which SQL command creates a new table?', 
+                                answer: 'CREATE',
+                                options: ['CREATE', 'INSERT', 'SELECT', 'UPDATE']
+                            },
+                            { 
+                                question: 'Which SQL command retrieves data?', 
+                                answer: 'SELECT',
+                                options: ['SELECT', 'UPDATE', 'DELETE', 'DROP']
+                            },
+                            { 
+                                question: 'Command to clear all rows but keep table?', 
+                                answer: 'TRUNCATE',
+                                options: ['TRUNCATE', 'DELETE', 'DROP', 'ALTER']
+                            },
+                            { 
+                                question: 'Which command changes existing data?', 
+                                answer: 'UPDATE',
+                                options: ['UPDATE', 'INSERT', 'SELECT', 'GRANT']
+                            },
+                            { 
+                                question: 'Command to undo transaction changes?', 
+                                answer: 'ROLLBACK',
+                                options: ['ROLLBACK', 'COMMIT', 'SAVEPOINT', 'REVOKE']
+                            },
+                            { 
+                                question: 'SQL clause to filter data?', 
+                                answer: 'WHERE',
+                                options: ['WHERE', 'GROUP BY', 'ORDER BY', 'HAVING']
+                            },
+                            { 
+                                question: 'Keyword to sort results?', 
+                                answer: 'ORDER BY',
+                                options: ['ORDER BY', 'GROUP BY', 'SORT', 'ARRANGE']
+                            },
+                            { 
+                                question: 'JOIN that returns only matches?', 
+                                answer: 'INNER JOIN',
+                                options: ['INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN']
+                            },
+                            { 
+                                question: 'Command to remove entire table?', 
+                                answer: 'DROP',
+                                options: ['DROP', 'DELETE', 'TRUNCATE', 'REVOKE']
+                            },
+                            { 
+                                question: 'Command to give user permissions?', 
+                                answer: 'GRANT',
+                                options: ['GRANT', 'INSERT', 'REVOKE', 'SAVEPOINT']
+                            }
+                        ]
+                    },
+                    lawyer: {
+                        questions: [
+                            { 
+                                question: 'Main role of lawyer?', 
+                                answer: 'Legal advice',
+                                options: ['Legal advice', 'Entertainment', 'Sales', 'Teaching']
+                            },
+                            { 
+                                question: 'Defends crime accused?', 
+                                answer: 'Criminal lawyer',
+                                options: ['Criminal lawyer', 'Family lawyer', 'Tax lawyer', 'Environmental lawyer']
+                            },
+                            { 
+                                question: 'Highest court in India?', 
+                                answer: 'Supreme Court',
+                                options: ['Supreme Court', 'High Court', 'District Court', 'Sessions Court']
+                            },
+                            { 
+                                question: 'Supreme law of India?', 
+                                answer: 'Constitution',
+                                options: ['Constitution', 'Penal Code', 'Civil Code', 'Companies Act']
+                            },
+                            { 
+                                question: 'Degree for lawyer?', 
+                                answer: 'LLB',
+                                options: ['LLB', 'MBA', 'MBBS', 'B.Tech']
+                            },
+                            { 
+                                question: 'Regulates legal profession?', 
+                                answer: 'Bar Council',
+                                options: ['Bar Council', 'Medical Council', 'Engineering Council', 'Teaching Council']
+                            },
+                            { 
+                                question: 'Handles business law?', 
+                                answer: 'Corporate lawyer',
+                                options: ['Corporate lawyer', 'Family lawyer', 'Criminal lawyer', 'Immigration lawyer']
+                            },
+                            { 
+                                question: 'Person filing case?', 
+                                answer: 'Plaintiff',
+                                options: ['Plaintiff', 'Defendant', 'Witness', 'Judge']
+                            },
+                            { 
+                                question: 'Free legal service?', 
+                                answer: 'Pro bono',
+                                options: ['Pro bono', 'Corporate', 'Retainer', 'Commercial']
+                            },
+                            { 
+                                question: 'Visa and citizenship help?', 
+                                answer: 'Immigration lawyer',
+                                options: ['Immigration lawyer', 'Tax lawyer', 'Family lawyer', 'Criminal lawyer']
+                            }
+                        ]
+                    },
+                    python: {
+                        questions: [
+                            { 
+                                question: 'Who created Python?', 
+                                answer: 'Guido van Rossum',
+                                options: ['Guido van Rossum', 'Bill Gates', 'Mark Zuckerberg', 'Elon Musk']
+                            },
+                            { 
+                                question: 'Python language type?', 
+                                answer: 'Interpreted',
+                                options: ['Interpreted', 'Compiled', 'Assembly', 'Machine']
+                            },
+                            { 
+                                question: 'Python web framework?', 
+                                answer: 'Django',
+                                options: ['Django', 'Photoshop', 'Excel', 'PowerPoint']
+                            },
+                            { 
+                                question: 'Python print syntax?', 
+                                answer: 'print(\"Hello\")',
+                                options: ['print(\"Hello\")', 'echo \"Hello\"', 'console.log(\"Hello\")', 'System.out.println(\"Hello\")']
+                            },
+                            { 
+                                question: 'Python data analysis library?', 
+                                answer: 'Pandas',
+                                options: ['Pandas', 'jQuery', 'Bootstrap', 'React']
+                            },
+                            { 
+                                question: 'Python len() function does?', 
+                                answer: 'Returns length',
+                                options: ['Returns length', 'Deletes items', 'Sorts list', 'Creates loop']
+                            },
+                            { 
+                                question: 'Python comment symbol?', 
+                                answer: '#',
+                                options: ['#', '//', '/* */', '--']
+                            },
+                            { 
+                                question: 'Define function in Python?', 
+                                answer: 'def function_name():',
+                                options: ['def function_name():', 'function function_name()', 'func function_name()', 'create function_name()']
+                            },
+                            { 
+                                question: 'Python ML library?', 
+                                answer: 'TensorFlow',
+                                options: ['TensorFlow', 'Word', 'Excel', 'PowerPoint']
+                            },
+                            { 
+                                question: 'Python file extension?', 
+                                answer: '.py',
+                                options: ['.py', '.txt', '.html', '.js']
+                            }
+                        ]
+                    },
+                    cybersecurity: {
+                        questions: [
+                            { 
+                                question: 'Cybersecurity protects?', 
+                                answer: 'Digital systems',
+                                options: ['Digital systems', 'Physical buildings', 'Paper documents', 'Telephone calls']
+                            },
+                            { 
+                                question: 'What is phishing?', 
+                                answer: 'Fraudulent emails',
+                                options: ['Fraudulent emails', 'Catching fish', 'Computer virus', 'Hardware failure']
+                            },
+                            { 
+                                question: 'Two-factor authentication is?', 
+                                answer: 'Extra security layer',
+                                options: ['Extra security layer', 'Password manager', 'Antivirus software', 'Firewall rule']
+                            },
+                            { 
+                                question: 'What is malware?', 
+                                answer: 'Malicious software',
+                                options: ['Malicious software', 'Hardware component', 'Network cable', 'Security tool']
+                            },
+                            { 
+                                question: 'DDoS attack does?', 
+                                answer: 'Overwhelms systems',
+                                options: ['Overwhelms systems', 'Protects data', 'Encrypts files', 'Updates software']
+                            },
+                            { 
+                                question: 'Firewall purpose?', 
+                                answer: 'Block unauthorized access',
+                                options: ['Block unauthorized access', 'Speed up internet', 'Store passwords', 'Create backups']
+                            },
+                            { 
+                                question: 'What is ransomware?', 
+                                answer: 'Malware that encrypts data',
+                                options: ['Malware that encrypts data', 'Password manager', 'Security scanner', 'Backup software']
+                            },
+                            { 
+                                question: 'Social engineering means?', 
+                                answer: 'Manipulating people',
+                                options: ['Manipulating people', 'Building networks', 'Writing code', 'Installing software']
+                            },
+                            { 
+                                question: 'Ethical hacker does?', 
+                                answer: 'Tests system security',
+                                options: ['Tests system security', 'Breaks into systems illegally', 'Sells stolen data', 'Creates viruses']
+                            },
+                            { 
+                                question: 'Software updates should be?', 
+                                answer: 'Installed regularly',
+                                options: ['Installed regularly', 'Ignored', 'Deleted', 'Shared']
+                            }
+                        ]
+                    },
+                    digitalMarketing: {
+                        questions: [
+                            { 
+                                question: 'Digital marketing is?', 
+                                answer: 'Online promotion',
+                                options: ['Online promotion', 'Traditional advertising', 'Print media', 'Radio broadcasting']
+                            },
+                            { 
+                                question: 'SEO stands for?', 
+                                answer: 'Search Engine Optimization',
+                                options: ['Search Engine Optimization', 'Social Event Organization', 'Software Engineering Online', 'Sales Executive Office']
+                            },
+                            { 
+                                question: 'NOT social media platform?', 
+                                answer: 'MS Excel',
+                                options: ['MS Excel', 'Facebook', 'Instagram', 'Twitter']
+                            },
+                            { 
+                                question: 'CTR measures?', 
+                                answer: 'Click-Through Rate',
+                                options: ['Click-Through Rate', 'Customer Total Revenue', 'Content Time Ratio', 'Call To Register']
+                            },
+                            { 
+                                question: 'Content marketing goal?', 
+                                answer: 'Provide valuable content',
+                                options: ['Provide valuable content', 'Sell products directly', 'Collect email addresses', 'Increase website traffic']
+                            },
+                            { 
+                                question: 'Email marketing used for?', 
+                                answer: 'Communicate with customers',
+                                options: ['Communicate with customers', 'Store customer data', 'Process payments', 'Design websites']
+                            },
+                            { 
+                                question: 'PPC stands for?', 
+                                answer: 'Pay-Per-Click',
+                                options: ['Pay-Per-Click', 'Public Private Company', 'Personal Profile Creation', 'Product Price Comparison']
+                            },
+                            { 
+                                question: 'ROI measures?', 
+                                answer: 'Return on Investment',
+                                options: ['Return on Investment', 'Random Online Information', 'Real Online Identity', 'Rapid Order Integration']
+                            },
+                            { 
+                                question: 'Influencer marketing is?', 
+                                answer: 'Collaborating with popular people',
+                                options: ['Collaborating with popular people', 'Traditional TV advertising', 'Print media campaigns', 'Radio sponsorships']
+                            },
+                            { 
+                                question: 'Digital marketing advantage?', 
+                                answer: 'Measurable results',
+                                options: ['Measurable results', 'Higher costs', 'Limited reach', 'Slower results']
+                            }
+                        ]
+                    },
+                    dataScience: {
+                        questions: [
+                            { 
+                                question: 'Data science goal?', 
+                                answer: 'Extract insights from data',
+                                options: ['Extract insights from data', 'Create websites', 'Design graphics', 'Write documents']
+                            },
+                            { 
+                                question: 'Popular data science language?', 
+                                answer: 'Python',
+                                options: ['Python', 'HTML', 'CSS', 'JavaScript']
+                            },
+                            { 
+                                question: 'Machine learning is?', 
+                                answer: 'Algorithms that learn from data',
+                                options: ['Algorithms that learn from data', 'Computer hardware', 'Internet connection', 'Software installation']
+                            },
+                            { 
+                                question: 'Data visualization helps?', 
+                                answer: 'Understanding data patterns',
+                                options: ['Understanding data patterns', 'Storing data', 'Deleting data', 'Copying data']
+                            },
+                            { 
+                                question: 'Big data means?', 
+                                answer: 'Large datasets',
+                                options: ['Large datasets', 'Small files', 'Simple calculations', 'Basic programs']
+                            },
+                            { 
+                                question: 'First data science step?', 
+                                answer: 'Data collection',
+                                options: ['Data collection', 'Model deployment', 'Data visualization', 'Report writing']
+                            },
+                            { 
+                                question: 'Data cleaning is?', 
+                                answer: 'Removing errors from data',
+                                options: ['Removing errors from data', 'Washing computers', 'Deleting files', 'Installing software']
+                            },
+                            { 
+                                question: 'Big data tool?', 
+                                answer: 'Hadoop',
+                                options: ['Hadoop', 'Notepad', 'Calculator', 'Paint']
+                            },
+                            { 
+                                question: 'Data scientist needs?', 
+                                answer: 'Domain expertise',
+                                options: ['Domain expertise', 'Cooking skills', 'Driving license', 'Art degree']
+                            },
+                            { 
+                                question: 'Netflix uses data science for?', 
+                                answer: 'Recommendation system',
+                                options: ['Recommendation system', 'Video storage', 'Internet connection', 'Device manufacturing']
+                            }
+                        ]
+                    }
+                };
+                
+                for (const topicData of Object.values(this.topics)) {
+                    if (!Array.isArray(topicData.questions)) continue;
+                    topicData.questions = topicData.questions.map(question => {
+                        const shorten = value => String(value).trim().match(/[A-Za-z0-9]+/)?.[0] || String(value).trim();
+                        const options = question.options.map(shorten);
+                        const answer = shorten(question.answer);
+                        return new Set(options).size === 4 && options.includes(answer) ? {...question, options, answer} : question;
+                    });
+                }
+                try {
+                    const dynamicQuestions = JSON.parse(sessionStorage.getItem('aiplay_dynamic_questions') || 'null');
+                    if (Array.isArray(dynamicQuestions) && dynamicQuestions.length >= 9 && dynamicQuestions.every(q => q && Array.isArray(q.options) && q.options.length === 4 && q.options.includes(q.answer))) {
+                        this.topics.dynamic = { questions: dynamicQuestions };
+                    }
+                } catch (error) { console.warn('Unable to load personalised questions.', error); }
+                if (!this.topics[this.selectedTopic]) this.selectedTopic = 'maths';
+                this.currentQuestions = this.topics[this.selectedTopic].questions.slice(this.nextIndex, this.nextIndex + this.maxQuestions);
+            }
+            
+            displayCurrentQuestion() {
+                const questionEl = document.getElementById('questionDisplay');
+                
+                if (this.questionsAnswered < this.currentQuestions.length) {
+                    const q = this.currentQuestions[this.questionsAnswered];
+                    
+                    // Add fade-in animation
+                    questionEl.classList.remove('hide');
+                    questionEl.classList.add('show');
+                    questionEl.textContent = q.question;
+                    
+                    // Force black text for PC version
+                    if (document.body.classList.contains('web-version')) {
+                        questionEl.style.color = '#000000';
+                        questionEl.style.fontWeight = 'bold';
+                        questionEl.style.textShadow = 'none';
+                    }
+                    
+                    // Auto-hide question after 5 seconds for PC (longer for reading)
+                    const hideDelay = document.body.classList.contains('web-version') ? 6000 : 4000;
+                    setTimeout(() => {
+                        questionEl.classList.remove('show');
+                        questionEl.classList.add('hide');
+                    }, hideDelay);
+                } else {
+                    questionEl.classList.remove('hide');
+                    questionEl.classList.add('show');
+                    questionEl.textContent = 'All questions completed! Great job!';
+                    
+                    if (document.body.classList.contains('web-version')) {
+                        questionEl.style.color = '#000000';
+                    }
+                }
+            }
+            
+            initializeGameObjects() {
+                this.waterSurface = this.canvas.height - 450;
+                this.boat = { x: 200, y: this.waterSurface - 50, width: 120, height: 40, sway: 0 };
+                this.fisherman = { x: 250, y: this.waterSurface - 80, state: 'idle' };
+                this.rodTip = { x: 285, y: this.waterSurface - 95 };
+                
+                this.hook = { 
+                    x: 285, 
+                    y: this.waterSurface - 90, 
+                    isDragging: false, 
+                    isDropping: false,
+                    isCasting: false,
+                    speed: 0,
+                    originalX: 285,
+                    originalY: this.waterSurface - 90,
+                    radius: 8
+                };
+                
+                this.fishes = [];
+                this.clouds = [];
+                this.splashes = [];
+                this.particles = [];
+                this.waveOffset = 0;
+                this.mouseDown = false;
+                this.dragOffset = { x: 0, y: 0 };
+                
+                this.initializeClouds();
+                this.initializeFishes();
+            }
+            
+            setupEventHandlers() {
+                document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+                document.getElementById('backBtn').addEventListener('click', () => this.goBackToTopics());
+                document.getElementById('fishingStartBtn').addEventListener('click', () => {
+                    document.getElementById('fishingHowTo').style.display = 'none';
+                });
+                
+                // Mouse/touch events with proper preventDefault
+                this.canvas.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    this.handleMouseDown(e);
+                });
+                this.canvas.addEventListener('mousemove', (e) => {
+                    e.preventDefault();
+                    this.handleMouseMove(e);
+                });
+                this.canvas.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    this.handleMouseUp(e);
+                });
+                this.canvas.addEventListener('mouseleave', (e) => {
+                    e.preventDefault();
+                    this.handleMouseUp(e);
+                });
+                
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.handleMouseDown(e.touches[0]);
+                }, { passive: false });
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.handleMouseMove(e.touches[0]);
+                }, { passive: false });
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.handleMouseUp(e);
+                }, { passive: false });
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+            
+            handleMouseDown(e) {
+                if (!this.gameStarted) return;
+                
+                const mousePos = this.getMousePos(e);
+                const hookDistance = Math.sqrt(
+                    Math.pow(mousePos.x - this.hook.x, 2) + Math.pow(mousePos.y - this.hook.y, 2)
+                );
+                
+                if (hookDistance <= this.hook.radius + 15) {
+                    this.hook.isDragging = true;
+                    this.mouseDown = true;
+                    this.dragOffset.x = mousePos.x - this.hook.x;
+                    this.dragOffset.y = mousePos.y - this.hook.y;
+                    
+                    // Prevent any default behavior or page refresh
+                    if (e && e.preventDefault) e.preventDefault();
+                    if (e && e.stopPropagation) e.stopPropagation();
+                }
+            }
+            
+            handleMouseMove(e) {
+                if (!this.gameStarted || !this.hook.isDragging || !this.mouseDown) return;
+                
+                // Prevent any default behavior or page refresh
+                if (e && e.preventDefault) e.preventDefault();
+                if (e && e.stopPropagation) e.stopPropagation();
+                
+                const mousePos = this.getMousePos(e);
+                this.hook.x = mousePos.x - this.dragOffset.x;
+                this.hook.y = mousePos.y - this.dragOffset.y;
+                
+                // Keep hook within bounds
+                this.hook.x = Math.max(50, Math.min(this.canvas.width - 50, this.hook.x));
+                this.hook.y = Math.max(50, this.hook.y);
+            }
+            
+            handleMouseUp(e) {
+                if (this.hook.isDragging) {
+                    this.hook.isDragging = false;
+                    this.mouseDown = false;
+                }
+            }
+            
+            startGame() {
+                this.gameStarted = true;
+                this.initializeFishes(); // Initialize fish for first question
+                document.getElementById('startBtn').style.display = 'none';
+                // Instructions removed for full-screen design
+            }
+            
+            restartGame() {
+                this.score = 0;
+                this.questionsAnswered = 0;
+                this.gameStarted = false;
+                this.resetHook();
+                this.splashes = [];
+                this.particles = [];
+                this.fishes = [];
+                this.updateScore();
+                this.displayCurrentQuestion();
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('scorePanel').style.display = 'none';
+                // Instructions removed for full-screen design
+            }
+            
+            goBackToTopics() {
+                // Clear fishing game state and return to topic selection
+                sessionStorage.removeItem('aiplay_topic');
+                sessionStorage.removeItem('aiplay_game1Score');
+                sessionStorage.removeItem('aiplay_game2Score');
+                sessionStorage.removeItem('aiplay_nextIndex');
+                window.location.href = sessionStorage.getItem('aiplay_assistant_active') ? 'assistant.html' : 'game2.html';
+            }
+            
+            resetHook() {
+                this.hook.x = this.hook.originalX;
+                this.hook.y = this.hook.originalY;
+                this.hook.isDragging = false;
+                this.hook.isDropping = false;
+                this.hook.isCasting = false;
+                this.fisherman.state = 'idle';
+            }
+            
+            initializeClouds() {
+                this.clouds = [
+                    { x: 100, y: 50, width: 80, height: 40, speed: 0.3 },
+                    { x: 400, y: 30, width: 100, height: 50, speed: 0.2 },
+                    { x: 700, y: 60, width: 90, height: 45, speed: 0.25 }
+                ];
+            }
+            
+            initializeFishes() {
+                this.fishes = [];
+                if (this.questionsAnswered >= this.currentQuestions.length) return;
+                
+                const currentQ = this.currentQuestions[this.questionsAnswered];
+                if (!currentQ || !currentQ.options) return;
+                
+                const waterTop = this.waterSurface + 80;
+                const waterBottom = this.canvas.height - 80;
+                const waterHeight = waterBottom - waterTop;
+                
+                // Shuffle options for randomization
+                const shuffledOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < gameConfig.fishCount; i++) {
+                    const answerText = shuffledOptions[i];
+                    const isCorrect = answerText === currentQ.answer;
+                    
+                    // Calculate fish size based on text length - made smaller
+                    const textLength = answerText.length;
+                    const baseWidth = 80;      // Reduced from 120 to 80
+                    const baseHeight = 55;     // Reduced from 80 to 55
+                    const width = Math.max(baseWidth, Math.min(140, baseWidth + textLength * 5));  // Reduced from 200/8 to 140/5
+                    const height = Math.max(baseHeight, Math.min(85, baseHeight + textLength * 1.5));  // Reduced from 120/2 to 85/1.5
+                    
+                    // Calculate font size based on fish size and screen size
+                    const baseFontSize = Math.max(14, Math.min(20, width / (textLength + 2)));
+                    const screenScale = Math.min(window.innerWidth / 900, window.innerHeight / 600);
+                    const fontSize = Math.max(12, baseFontSize * Math.max(0.8, screenScale));
+                    
+                    // Position fish at different depths with better spacing
+                    const depthSection = waterHeight / gameConfig.fishCount;
+                    const yPosition = waterTop + (i * depthSection) + (depthSection * 0.2) + Math.random() * (depthSection * 0.6);
+                    
+                    // Find a position that doesn't overlap with existing fish
+                    let x, attempts = 0;
+                    const sectionWidth = (this.canvas.width - 180) / gameConfig.fishCount;
+                    do {
+                        // Try to spread fish across different horizontal sections
+                        const sectionStart = 60 + (i * sectionWidth);
+                        const sectionEnd = sectionStart + sectionWidth - width;
+                        x = sectionStart + Math.random() * (sectionEnd - sectionStart);
+                        attempts++;
+                    } while (this.checkFishCollision(x, yPosition, width, height) && attempts < 15);
+                    
+                    this.fishes.push({
+                        x: x,
+                        y: yPosition,
+                        width: width,
+                        height: height,
+                        baseWidth: width,
+                        baseHeight: height,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        color: gameConfig.fishColors[i],
+                        answerText: answerText,
+                        isCorrect: isCorrect,
+                        fontSize: fontSize,
+                        animFrame: Math.random() * 60,
+                        direction: Math.random() > 0.5 ? 1 : -1,
+                        caught: false,
+                        breatheOffset: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+            
+            updateScore() {
+                document.getElementById('score').textContent = this.score;
+            }
+            
+            showFeedback(text, isSuccess) {
+                const overlay = document.getElementById('feedbackOverlay');
+                const textElement = document.getElementById('feedbackText');
+                
+                textElement.textContent = text;
+                textElement.className = `feedback-text ${isSuccess ? 'success' : 'error'}`;
+                overlay.style.display = 'block';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 2000);
+            }
+            
+            // Check if a new fish position would overlap with existing fish
+            checkFishCollision(newX, newY, newWidth, newHeight) {
+                const minDistance = 30; // Minimum distance between fish centers
+                
+                for (let fish of this.fishes) {
+                    const centerX1 = newX + newWidth / 2;
+                    const centerY1 = newY + newHeight / 2;
+                    const centerX2 = fish.x + fish.width / 2;
+                    const centerY2 = fish.y + fish.height / 2;
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(centerX1 - centerX2, 2) + 
+                        Math.pow(centerY1 - centerY2, 2)
+                    );
+                    
+                    if (distance < (newWidth/2 + fish.width/2 + minDistance)) {
+                        return true; // Collision detected
+                    }
+                }
+                return false; // No collision
+            }
+            
+            drawScore() {
+                // Draw score in top-right corner for PC version
+                if (document.body.classList.contains('web-version')) {
+                    this.ctx.save();
+                    this.ctx.font = 'bold 28px Arial';
+                    this.ctx.fillStyle = '#FFFFFF';
+                    this.ctx.strokeStyle = '#000000';
+                    this.ctx.lineWidth = 4;
+                    this.ctx.textAlign = 'right';
+                    
+                    const scoreText = `Score: ${this.score}`;
+                    const x = this.canvas.width - 40;
+                    const y = 50;
+                    
+                    // Draw text with black outline for visibility
+                    this.ctx.strokeText(scoreText, x, y);
+                    this.ctx.fillText(scoreText, x, y);
+                    this.ctx.restore();
+                }
+            }
+
+            checkCollisions() {
+                for (let fish of this.fishes) {
+                    if (fish.caught) continue;
+                    
+                    const fishCenterX = fish.x + fish.width / 2;
+                    const fishCenterY = fish.y + fish.height / 2;
+                    const distance = Math.sqrt(
+                        Math.pow(this.hook.x - fishCenterX, 2) + 
+                        Math.pow(this.hook.y - fishCenterY, 2)
+                    );
+                    
+                    // Larger collision area for bigger fish
+                    const collisionRadius = Math.max(40, fish.width / 3);
+                    
+                    if (distance < collisionRadius) {
+                        fish.caught = true;
+                        this.handleFishCaught(fish);
+                        return;
+                    }
+                }
+            }
+            
+            handleFishCaught(fish) {
+                this.createSplash(this.hook.x, this.waterSurface);
+                this.playFishCatchSound(fish.isCorrect);
+                
+                if (fish.isCorrect) {
+                    this.score += 1;
+                    this.updateScore();
+                    this.showFeedback(`Correct! "${fish.answerText}"`, true);
+                } else {
+                    this.showFeedback(`Wrong! "${fish.answerText}"`, false);
+                }
+                
+                this.questionsAnswered++;
+                this.displayCurrentQuestion();
+                
+                setTimeout(() => {
+                    this.resetHook();
+                    
+                    // Generate new fish for next question or end game
+                    if (this.questionsAnswered >= this.maxQuestions) {
+                        this.endGame();
+                    } else {
+                        this.initializeFishes();
+                    }
+                }, 2500);
+            }
+            
+            playFishCatchSound(isCorrect) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    if (isCorrect) {
+                        // Success sound
+                        [523, 659, 784].forEach((freq, i) => {
+                            const oscillator = audioContext.createOscillator();
+                            const gainNode = audioContext.createGain();
+                            
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioContext.destination);
+                            
+                            oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                            oscillator.type = 'sine';
+                            
+                            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+                            
+                            oscillator.start(audioContext.currentTime + i * 0.1);
+                            oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                        });
+                    } else {
+                        // Wrong sound
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
+                        oscillator.type = 'sawtooth';
+                        
+                        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                    }
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+            
+            endGame() {
+                this.gameStarted = false;
+                const totalScore = this.game1Score + this.game2Score + this.score;
+                
+                // Save final scores
+                sessionStorage.setItem('aiplay_game3Score', String(this.score));
+                sessionStorage.setItem('aiplay_totalScore', String(totalScore));
+                
+                // Show final scoreboard
+                document.getElementById('scoreBreakdown').innerHTML = `
+                    <div><strong>Game 1 (Bubble)</strong>: ${this.game1Score}/3</div>
+                    <div><strong>Game 2 (Rocket)</strong>: ${this.game2Score}/3</div>
+                    <div><strong>Game 3 (Fishing)</strong>: ${this.score}/3</div>
+                    <div style="margin-top:8px; font-size:1.2em;"><strong>Total</strong>: ${totalScore}/9</div>
+                `;
+                
+                document.getElementById('scorePanel').style.display = 'block';
+                // Instructions already hidden for full-screen design
+            }
+            
+            createSplash(x, y) {
+                for (let i = 0; i < 3; i++) {
+                    this.splashes.push({
+                        x: x,
+                        y: y,
+                        size: i * 10,
+                        maxSize: 50 + (i * 15),
+                        life: 40 - (i * 5),
+                        maxLife: 40 - (i * 5),
+                        delay: i * 5
+                    });
+                }
+                
+                for (let i = 0; i < 12; i++) {
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 10,
+                        y: y + (Math.random() - 0.5) * 10,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: Math.random() * -6 - 3,
+                        life: 30,
+                        maxLife: 30,
+                        size: Math.random() * 4 + 2,
+                        gravity: 0.3
+                    });
+                }
+            }
+            
+            // Remove spawnNewFish method - no longer needed as we regenerate all fish per question
+            
+            update() {
+                this.gameTime++;
+                this.waveOffset += gameConfig.animations.waveSpeed;
+                
+                // Update boat swaying
+                this.boat.sway = Math.sin(this.gameTime * 0.02) * 3;
+                this.rodTip.x = 285 + this.boat.sway * 0.3;
+                this.rodTip.y = this.waterSurface - 95 + this.boat.sway * 0.2;
+                
+                // Update original hook position with boat sway
+                if (!this.hook.isDragging) {
+                    this.hook.originalX = this.rodTip.x;
+                    this.hook.originalY = this.rodTip.y + 5;
+                }
+                
+                // Update clouds
+                for (let cloud of this.clouds) {
+                    cloud.x += cloud.speed;
+                    if (cloud.x > this.canvas.width + cloud.width) {
+                        cloud.x = -cloud.width;
+                    }
+                }
+                
+                // Update fish
+                for (let fish of this.fishes) {
+                    if (fish.caught) continue;
+                    
+                    fish.animFrame++;
+                    fish.breatheOffset += 0.03;
+                    
+                    // Smooth swimming movement with collision avoidance
+                    const newX = fish.x + fish.vx;
+                    const newY = fish.y + fish.vy;
+                    
+                    // Check for potential collisions with other fish
+                    let canMove = true;
+                    for (let otherFish of this.fishes) {
+                        if (otherFish === fish || otherFish.caught) continue;
+                        
+                        const distance = Math.sqrt(
+                            Math.pow(newX - otherFish.x, 2) + 
+                            Math.pow(newY - otherFish.y, 2)
+                        );
+                        
+                        if (distance < fish.width/2 + otherFish.width/2 + 20) {
+                            canMove = false;
+                            // Reverse direction to avoid collision
+                            fish.vx *= -1;
+                            fish.direction *= -1;
+                            break;
+                        }
+                    }
+                    
+                    if (canMove) {
+                        fish.x = newX;
+                        fish.y = newY;
+                    }
+                    
+                    // Gentle breathing animation
+                    const breatheScale = 1 + Math.sin(fish.breatheOffset) * 0.02;
+                    fish.width = fish.baseWidth * breatheScale;
+                    fish.height = fish.baseHeight * breatheScale;
+                    
+                    // Boundary checking with padding
+                    const padding = 20;
+                    if (fish.x <= padding || fish.x >= this.canvas.width - fish.width - padding) {
+                        fish.vx *= -1;
+                        fish.direction = fish.vx > 0 ? 1 : -1;
+                    }
+                    
+                    const waterTop = this.waterSurface + 50;
+                    const waterBottom = this.canvas.height - 50;
+                    if (fish.y <= waterTop || fish.y >= waterBottom - fish.height) {
+                        fish.vy *= -1;
+                    }
+                    
+                    // Occasional direction changes for natural movement
+                    if (Math.random() < 0.002) {
+                        fish.vx = (Math.random() - 0.5) * 1.5;
+                        fish.vy = (Math.random() - 0.5) * 0.3;
+                        fish.direction = fish.vx > 0 ? 1 : -1;
+                    }
+                }
+                
+                // Update splashes and particles
+                for (let i = this.splashes.length - 1; i >= 0; i--) {
+                    const splash = this.splashes[i];
+                    if (splash.delay > 0) {
+                        splash.delay--;
+                        continue;
+                    }
+                    splash.life--;
+                    splash.size = splash.maxSize * (1 - splash.life / splash.maxLife);
+                    if (splash.life <= 0) {
+                        this.splashes.splice(i, 1);
+                    }
+                }
+                
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const particle = this.particles[i];
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.vy += particle.gravity;
+                    particle.vx *= 0.99;
+                    particle.life--;
+                    
+                    if (particle.life <= 0 || particle.y > this.canvas.height) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+                
+                // Check collisions
+                if (this.gameStarted) {
+                    this.checkCollisions();
+                }
+            }
+            
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.drawSky();
+                this.drawWater();
+                this.drawBoat();
+                this.drawFisherman();
+                
+                // Draw fish
+                for (let fish of this.fishes) {
+                    this.drawFish(fish);
+                }
+                
+                this.drawFishingLine();
+                this.drawHook();
+                this.drawSplashes();
+                this.drawParticles();
+                this.drawScore(); // Add score display for PC
+            }
+            
+            drawSky() {
+                // Sky gradient
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.waterSurface);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#B0E0E6');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.waterSurface);
+                
+                // Sun
+                this.ctx.fillStyle = '#FFD700';
+                this.ctx.beginPath();
+                this.ctx.arc(this.canvas.width - 100, 60, 25, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Clouds
+                for (let cloud of this.clouds) {
+                    this.drawCloud(cloud.x, cloud.y, cloud.width, cloud.height);
+                }
+            }
+            
+            drawCloud(x, y, width, height) {
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                this.ctx.beginPath();
+                this.ctx.arc(x, y + height/2, height/2, 0, Math.PI * 2);
+                this.ctx.arc(x + width/4, y, height/2, 0, Math.PI * 2);
+                this.ctx.arc(x + width/2, y + height/3, height/2, 0, Math.PI * 2);
+                this.ctx.arc(x + width*3/4, y, height/2, 0, Math.PI * 2);
+                this.ctx.arc(x + width, y + height/2, height/2, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+            
+            drawWater() {
+                // Water background
+                const gradient = this.ctx.createLinearGradient(0, this.waterSurface, 0, this.canvas.height);
+                gradient.addColorStop(0, '#4169E1');
+                gradient.addColorStop(0.5, '#1E90FF');
+                gradient.addColorStop(1, '#191970');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, this.waterSurface, this.canvas.width, this.canvas.height - this.waterSurface);
+                
+                // Waves
+                this.ctx.strokeStyle = '#87CEEB';
+                this.ctx.lineWidth = 3;
+                this.ctx.globalAlpha = 0.6;
+                
+                for (let wave = 0; wave < 4; wave++) {
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth = 4 - wave;
+                    
+                    for (let x = 0; x <= this.canvas.width; x += 5) {
+                        const y = this.waterSurface + Math.sin(x * 0.02 + this.waveOffset + wave * 2) * (10 - wave * 2);
+                        if (x === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.globalAlpha = 1;
+            }
+            
+            drawBoat() {
+                const boatY = this.boat.y + this.boat.sway;
+                
+                // Boat hull
+                this.ctx.fillStyle = '#8B4513';
+                this.ctx.fillRect(this.boat.x - 10, boatY + 20, 140, 20);
+                
+                // Boat deck
+                this.ctx.fillStyle = '#DEB887';
+                this.ctx.fillRect(this.boat.x, boatY + 10, 120, 12);
+            }
+            
+            drawFisherman() {
+                const fishermanY = this.fisherman.y + this.boat.sway;
+                
+                // Body
+                this.ctx.fillStyle = '#4169E1';
+                this.ctx.fillRect(this.fisherman.x, fishermanY + 20, 15, 25);
+                
+                // Head
+                this.ctx.fillStyle = '#FDBCB4';
+                this.ctx.beginPath();
+                this.ctx.arc(this.fisherman.x + 7, fishermanY + 10, 8, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Hat
+                this.ctx.fillStyle = '#32CD32';
+                this.ctx.fillRect(this.fisherman.x + 2, fishermanY + 2, 10, 8);
+                
+                // Fishing rod
+                this.ctx.strokeStyle = '#8B4513';
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.fisherman.x + 15, fishermanY + 15);
+                this.ctx.lineTo(this.rodTip.x, this.rodTip.y);
+                this.ctx.stroke();
+            }
+            
+            drawFishingLine() {
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.rodTip.x, this.rodTip.y);
+                this.ctx.lineTo(this.hook.x, this.hook.y);
+                this.ctx.stroke();
+            }
+            
+            drawHook() {
+                // Hook shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.beginPath();
+                this.ctx.arc(this.hook.x + 2, this.hook.y + 2, this.hook.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Hook body
+                this.ctx.fillStyle = '#FFD700';
+                this.ctx.beginPath();
+                this.ctx.arc(this.hook.x, this.hook.y, this.hook.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Hook outline
+                this.ctx.strokeStyle = '#B8860B';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+            
+            drawFish(fish) {
+                if (fish.caught) return;
+                
+                this.ctx.save();
+                this.ctx.translate(fish.x + fish.width/2, fish.y + fish.height/2);
+                this.ctx.scale(fish.direction, 1);
+                
+                // Fish shadow for depth
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(2, 2, fish.width/2, fish.height/2, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Fish body with gradient
+                const gradient = this.ctx.createRadialGradient(0, -fish.height/4, 0, 0, 0, fish.width/2);
+                gradient.addColorStop(0, this.lightenColor(fish.color, 30));
+                gradient.addColorStop(1, fish.color);
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, 0, fish.width/2, fish.height/2, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Fish outline
+                this.ctx.strokeStyle = this.darkenColor(fish.color, 20);
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Fish tail with animation
+                const tailWag = Math.sin(fish.animFrame * 0.15) * 4;
+                this.ctx.fillStyle = fish.color;
+                this.ctx.beginPath();
+                this.ctx.moveTo(-fish.width/2, 0);
+                this.ctx.lineTo(-fish.width/2 - 18, -12 + tailWag);
+                this.ctx.lineTo(-fish.width/2 - 25, 0 + tailWag);
+                this.ctx.lineTo(-fish.width/2 - 18, 12 + tailWag);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+                
+                // Fish eye
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.beginPath();
+                this.ctx.arc(fish.width/5, -fish.height/6, 6, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                this.ctx.fillStyle = '#000000';
+                this.ctx.beginPath();
+                this.ctx.arc(fish.width/5 + 1, -fish.height/6, 3, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Answer text - scale back to original orientation
+                this.ctx.scale(fish.direction, 1);
+                this.ctx.fillStyle = '#FFFFFF';
+                this.ctx.strokeStyle = '#000000';
+                this.ctx.lineWidth = 3;
+                this.ctx.font = `bold ${fish.fontSize}px 'Nunito', sans-serif`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                
+                // Text with outline for better visibility
+                const textMaxWidth = Math.max(48, fish.width - 22);
+                this.ctx.strokeText(fish.answerText, 0, fish.height/8, textMaxWidth);
+                this.ctx.fillText(fish.answerText, 0, fish.height/8, textMaxWidth);
+                
+                this.ctx.restore();
+            }
+            
+            lightenColor(color, percent) {
+                const num = parseInt(color.replace("#",""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255))
+                    .toString(16).slice(1);
+            }
+            
+            darkenColor(color, percent) {
+                const num = parseInt(color.replace("#",""), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                    (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 + (B > 255 ? 255 : B < 0 ? 0 : B))
+                    .toString(16).slice(1);
+            }
+            
+            drawSplashes() {
+                for (let splash of this.splashes) {
+                    if (splash.delay > 0) continue;
+                    
+                    this.ctx.strokeStyle = '#87CEEB';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.globalAlpha = splash.life / splash.maxLife;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(splash.x, splash.y, splash.size, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+                this.ctx.globalAlpha = 1;
+            }
+            
+            drawParticles() {
+                for (let particle of this.particles) {
+                    this.ctx.fillStyle = '#87CEEB';
+                    this.ctx.globalAlpha = particle.life / particle.maxLife;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                this.ctx.globalAlpha = 1;
+            }
+            
+            animate() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // ENHANCED MOBILE DETECTION SYSTEM
+        function detectMobileDevice() {
+            const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isSmallScreen = window.innerWidth <= 768;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobileScreen = window.innerWidth < 1024; // More accurate mobile detection
+            
+            return {
+                isMobile: isMobileUA || (isTouchDevice && isSmallScreen) || isMobileScreen,
+                isTouch: isTouchDevice,
+                isPortrait: isPortrait,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                deviceType: isMobileUA || isMobileScreen ? 'mobile' : 'desktop'
+            };
+        }
+
+        // AUTO-DETECT AND APPLY APPROPRIATE VERSION
+        function initializeMobileOptimization() {
+            const deviceInfo = detectMobileDevice();
+            
+            // Clear any existing classes
+            document.body.classList.remove('mobile-version', 'web-version', 'mobile-detected');
+            
+            // Apply appropriate version based on detection
+            if (deviceInfo.isMobile) {
+                document.body.classList.add('mobile-version', 'mobile-detected');
+                console.log(`📱 MOBILE DETECTED - Instagram Reel Format Applied (${deviceInfo.screenWidth}x${deviceInfo.screenHeight})`);
+            } else {
+                document.body.classList.add('web-version');
+                console.log(`🖥️ DESKTOP DETECTED - Full Desktop Design Applied (${deviceInfo.screenWidth}x${deviceInfo.screenHeight})`);
+            }
+        }
+
+        // VERSION TOGGLE FUNCTIONALITY
+        function updateToggleButton(currentMode) {
+            const button = document.getElementById('versionToggle');
+            if (!button) return; // Safety check
+            if (currentMode === 'mobile') {
+                button.innerHTML = '🖥️';
+                button.title = 'Switch to Web Version (Desktop)';
+                button.classList.remove('web-mode');
+                showModeNotification('🎣 Instagram Reel Mobile Format Active');
+            } else {
+                button.innerHTML = '📱';
+                button.title = 'Switch to Mobile Version (Instagram Reel Format)';
+                button.classList.add('web-mode');
+                showModeNotification('🖥️ Desktop Web Format Active');
+            }
+        }
+
+        // VISUAL FEEDBACK FOR MODE SWITCHING
+        function showModeNotification(message) {
+            const existing = document.querySelector('.mode-notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'mode-notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed; top: 80px; right: 15px;
+                background: rgba(30, 144, 255, 0.95); color: white;
+                padding: 10px 15px; border-radius: 25px; font-size: 14px; font-weight: bold;
+                z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        // AUTO-INITIALIZE ON PAGE LOAD
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent any mobile browser refresh behaviors
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevent pull-to-refresh and other gestures
+            let lastTouchY = 0;
+            document.addEventListener('touchstart', function(e) {
+                lastTouchY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                const touchY = e.touches[0].clientY;
+                const touchYDelta = touchY - lastTouchY;
+                lastTouchY = touchY;
+                
+                // Prevent pull-to-refresh
+                if (touchYDelta > 0 && window.scrollY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Initialize mobile optimization first
+            initializeMobileOptimization();
+            
+            // Initialize the fishing game
+            new FishingQuiz();
+        });
+
+        // RESPONSIVE CANVAS ADJUSTMENT
+        function adjustCanvasForMobile() {
+            const deviceInfo = detectMobileDevice();
+            if (deviceInfo.isMobile && document.body.classList.contains('mobile-version')) {
+                if (window.game && typeof window.game.resizeCanvas === 'function') {
+                    window.game.resizeCanvas();
+                }
+            }
+        }
+
+        // WINDOW RESIZE HANDLER
+        window.addEventListener('resize', function() {
+            adjustCanvasForMobile();
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aiplay – Rocket Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Nunito:wght@400;700&display=swap');
+        
+        :root {
+            --sky-blue: #a3daff;
+            --dark-blue: #1c273a;
+            --correct-green: #3ad39f;
+            --wrong-red: #ff6347;
+            --accent-yellow: #ffcf54;
+            --white: #ffffff;
+            --gray: #cccccc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, var(--dark-blue) 0%, var(--sky-blue) 100%);
+            font-family: 'Nunito', sans-serif;
+            color: var(--dark-blue);
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mobile Detection and Auto-Optimization */
+        body.mobile-detected {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+        }
+        
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        /* Mobile/Web Toggle Button */
+        /* Toggle button removed - auto-detect mobile only */
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            text-align: center;
+        }
+        
+        h1, h2 {
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+
+        .title {
+            color: var(--white);
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .game-message {
+            color: var(--white);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 5px rgba(0,0,0,0.5);
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .start-button, .restart-button, .small-button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--dark-blue);
+            background-color: var(--accent-yellow);
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 0 var(--accent-yellow);
+            transform: translateY(-2px);
+            transition: all 0.2s ease-in-out;
+            pointer-events: auto;
+            cursor: pointer;
+            text-shadow: none;
+        }
+        
+        .start-button:hover, .restart-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 7px 0 var(--accent-yellow);
+        }
+
+        .start-button:active, .restart-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 0 var(--accent-yellow);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* MOBILE VERSION STYLES */
+        @media screen and (max-width: 768px), (pointer: coarse) {
+            body.mobile-version .title {
+                font-size: 2.2em;
+                margin-bottom: 20px;
+                padding: 0 20px;
+            }
+            
+            body.mobile-version .game-message {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+                padding: 0 20px;
+            }
+            
+            body.mobile-version .start-button, 
+            body.mobile-version .restart-button {
+                font-size: 1.3em;
+                padding: 15px 30px;
+                margin: 10px;
+                min-width: 140px;
+                min-height: 50px;
+                touch-action: manipulation;
+            }
+            
+            body.mobile-version .small-button {
+                font-size: 1.1em;
+                padding: 12px 25px;
+                min-width: 120px;
+                min-height: 44px;
+            }
+        }
+
+        /* INSTAGRAM REEL MOBILE FORMAT (9:16 Aspect Ratio) */
+        @media screen and (max-width: 768px) {
+            body.mobile-version {
+                position: fixed !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+                top: 0 !important;
+                left: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: linear-gradient(to bottom, var(--dark-blue) 0%, var(--sky-blue) 100%) !important;
+                display: block !important;
+            }
+            
+            body.mobile-version .game-container {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: linear-gradient(to bottom, var(--dark-blue) 0%, var(--sky-blue) 100%) !important;
+                border-radius: 0 !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-shadow: 0 0 30px rgba(163,218,255,0.4) !important;
+                border: 3px solid rgba(255,255,255,0.3) !important;
+            }
+            
+            body.mobile-version canvas {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                z-index: 1 !important;
+                display: block !important;
+                background: transparent !important;
+            }
+            
+            body.mobile-version .title {
+                position: fixed !important;
+                top: 2% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.8em !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                text-shadow: 3px 3px 6px rgba(0,0,0,0.5) !important;
+                color: var(--accent-yellow) !important;
+                z-index: 1000 !important;
+                text-align: center !important;
+                width: 90% !important;
+            }
+            
+            body.mobile-version .game-message {
+                position: fixed !important;
+                top: 8% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.2em !important;
+                margin: 0 !important;
+                text-align: center !important;
+                padding: 12px 20px !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-radius: 15px !important;
+                color: var(--dark-blue) !important;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+                z-index: 1000 !important;
+                width: 85% !important;
+                max-width: 350px !important;
+                text-shadow: none !important;
+            }
+            
+            body.mobile-version .start-button, 
+            body.mobile-version .restart-button {
+                position: absolute !important;
+                bottom: 8% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.2em !important;
+                padding: 12px 30px !important;
+                margin: 0 !important;
+                border-radius: 20px !important;
+                min-width: 180px !important;
+                box-shadow: 0 6px 15px rgba(255,207,84,0.4) !important;
+                z-index: 1000 !important;
+                width: auto !important;
+                touch-action: manipulation !important;
+            }
+            
+            body.mobile-version .small-button {
+                position: absolute !important;
+                bottom: 5% !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.1em !important;
+                padding: 12px 25px !important;
+                min-width: 150px !important;
+                border-radius: 20px !important;
+                z-index: 1000 !important;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+                touch-action: manipulation !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.8em;
+                margin-bottom: 15px;
+            }
+            .game-message {
+                font-size: 1.5em;
+                margin-bottom: 15px;
+            }
+            .start-button, .restart-button {
+                font-size: 1.1em;
+                padding: 10px 20px;
+            }
+            .small-button {
+                font-size: 0.9em;
+                padding: 8px 14px;
+            }
+            .score-panel {
+                font-size: 1em;
+                padding: 8px 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+            .game-message {
+                font-size: 1.3em;
+                margin-bottom: 10px;
+            }
+            .start-button, .restart-button {
+                font-size: 1em;
+                padding: 8px 16px;
+            }
+            .small-button {
+                font-size: 0.8em;
+                padding: 6px 12px;
+            }
+            .score-panel {
+                font-size: 0.9em;
+                padding: 6px 10px;
+            }
+        }
+    .score-panel { color: var(--white); font-size: 1.1em; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 10px; }
+        .button-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .small-button { font-size: 1em; padding: 10px 16px; background-color: #ffd86a; }
+    /* How-to modal for Rocket */
+    #rocketHowTo { position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:50; display:none; align-items:center; justify-content:center; padding:16px; }
+    .modal-card { width:min(92vw,520px); background:#ffffff; border-radius:16px; box-shadow:0 10px 24px rgba(0,0,0,0.25); padding:18px; text-align:left; }
+    .modal-card h3 { margin:0 0 8px; font-size:18px; color:#1b3b5a; }
+    .modal-card p { margin:6px 0; font-size:14px; color:#23465f; }
+    .modal-list { margin:6px 0 0 18px; padding:0; color:#23465f; font-size:14px; }
+    .modal-actions { margin-top:12px; display:flex; gap:10px; justify-content:flex-end; }
+    .modal-btn { padding:10px 14px; border:0; border-radius:10px; background:#ffcf54; color:#1c273a; font-weight:800; }
+    
+    /* WEB VERSION STYLES - FULL SCREEN DESKTOP */
+    body.web-version {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--dark-blue), var(--sky-blue));
+        display: block;
+    }
+    
+    body.web-version .game-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        background: linear-gradient(135deg, var(--dark-blue), var(--sky-blue));
+        overflow: hidden;
+    }
+    
+    body.web-version canvas {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 20px;
+    }
+    
+    body.web-version .title {
+        position: fixed;
+        top: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 3.5em;
+        margin: 0;
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+        color: var(--accent-yellow);
+        z-index: 1000;
+        text-align: center;
+        width: 90%;
+        font-weight: bold;
+    }
+    
+    body.web-version .game-message {
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.8em;
+        margin: 0;
+        text-align: center;
+        padding: 20px 35px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        color: var(--dark-blue);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        z-index: 1000;
+        width: 80%;
+        max-width: 600px;
+        font-weight: bold;
+    }
+    
+    body.web-version .start-button, 
+    body.web-version .restart-button {
+        position: fixed;
+        bottom: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.5em;
+        padding: 20px 40px;
+        margin: 0;
+        min-width: 250px;
+        border-radius: 35px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        z-index: 1000;
+        font-weight: bold;
+    }
+    
+    body.web-version .small-button {
+        position: fixed;
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.3em;
+        padding: 15px 30px;
+        min-width: 200px;
+        border-radius: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        z-index: 1000;
+        font-weight: bold;
+        margin: 12px;
+        min-width: 150px;
+    }
+    </style>
+</head>
+<body>
+    <!-- Toggle button removed - auto mobile detection -->
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-overlay" id="uiOverlay">
+            <h1 class="title" id="gameTitle">Rocket Quiz</h1>
+            <button class="start-button" id="startButton">Start</button>
+            <h2 class="game-message" id="gameMessage" style="display: none;"></h2>
+            <div class="score-panel" id="scorePanel" style="display:none;"></div>
+            <div class="button-row" id="endButtons" style="display:none;">
+                <button class="restart-button" id="playAgainBtn">Play Again</button>
+                <button class="small-button" id="changeTopicBtn">Change Topic</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rocket How To Modal -->
+    <div id="rocketHowTo">
+        <div class="modal-card">
+            <h3>How to Play – Rocket Quiz</h3>
+            <ul class="modal-list">
+                <li>One question appears at the top.</li>
+                <li>Tap one of the four answer boxes (fixed positions).</li>
+                <li>3 questions total in this game.</li>
+            </ul>
+            <div class="modal-actions">
+                <button id="rocketStartBtn" class="modal-btn">Start Rocket Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const gameMessage = document.getElementById('gameMessage');
+        const uiOverlay = document.getElementById('uiOverlay');
+
+        // Game State Variables
+        let gameState = 'start';
+        let rocket = { x: 0, y: 0, w: 60, h: 80, animFrame: 0, withFire: false, shake: 0, fallingSpeed: 0, opacity: 1.0, fadeSpeed: 0 }; // Optimized size for mobile visibility
+    let question = { text: '', answer: '' };
+    let answers = [];
+    let game1Score = 0; // from game 1
+    let game2Score = 0;
+    let totalScore = 0;
+    let topics = null;
+    let selectedTopic = null;
+    let nextIndex = 0; // starting index for game2
+    let qCountGame2 = 3; // strictly 3 questions in Game 2
+    let qIndex = 0; // 0..(qCountGame2-1)
+    let resolving = false; // prevent multiple transitions per question
+
+        // Color variables
+        const white = '#ffffff';
+        const gray = '#cccccc';
+        const darkBlue = '#1c273a';
+        const correctGreen = '#3ad39f';
+
+        // Visual properties
+        const answerBoxWidth = 100;
+        const answerBoxHeight = 60;
+        const answerBoxMargin = 20;
+
+        // Enhanced Game Sounds using Web Audio API
+        function playRocketLaunch() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                const filter = audioContext.createBiquadFilter();
+                
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Rocket launch sound: low rumble building up
+                oscillator.frequency.setValueAtTime(80, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 1.0);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(8000, audioContext.currentTime + 1.0);
+                
+                gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1.2);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playCorrectChime() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Play a pleasant ascending chime
+                [523, 659, 784].forEach((freq, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime + i * 0.1);
+                    oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                });
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playWrongBuzz() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Descending buzz for wrong answer
+                oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.4);
+                oscillator.type = 'sawtooth';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.4);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        function playCrashThud() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create crash sound with noise and low frequency
+                const bufferSize = audioContext.sampleRate * 0.5; // 0.5 seconds
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // Generate noise with envelope
+                for (let i = 0; i < bufferSize; i++) {
+                    const envelope = Math.exp(-i / (bufferSize * 0.1)); // Quick decay
+                    data[i] = (Math.random() * 2 - 1) * envelope * 0.3;
+                }
+                
+                const source = audioContext.createBufferSource();
+                const filter = audioContext.createBiquadFilter();
+                const gainNode = audioContext.createGain();
+                
+                source.buffer = buffer;
+                source.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, audioContext.currentTime);
+                
+                gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                source.start(audioContext.currentTime);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+                // Enhanced mobile touch event prevention
+        function preventMobileRefresh() {
+            // Prevent pull-to-refresh and zoom
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+            
+            document.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevent pull-to-refresh specifically
+            let lastTouchY = 0;
+            document.addEventListener('touchstart', function(e) {
+                lastTouchY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                const touchY = e.touches[0].clientY;
+                const touchYDelta = touchY - lastTouchY;
+                lastTouchY = touchY;
+                
+                if (touchYDelta > 0 && window.scrollY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+
+                // Initial setup
+                window.onload = function() {
+            preventMobileRefresh();
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('click', handleInput);
+            canvas.addEventListener('touchstart', handleTouchInput, { passive: false });
+            canvas.addEventListener('touchend', function(e) { e.preventDefault(); }, { passive: false });
+            startButton.addEventListener('click', startGame);
+                        document.getElementById('playAgainBtn').addEventListener('click', () => {
+                                // Restart both games quickly: go back to game2 topic overlay
+                                window.location.href = 'game2.html';
+                        });
+                        document.getElementById('changeTopicBtn').addEventListener('click', () => {
+                                window.location.href = 'game2.html';
+                        });
+                        document.getElementById('rocketStartBtn').addEventListener('click', () => {
+                            document.getElementById('rocketHowTo').style.display = 'none';
+                            startGame();
+                        });
+            
+            // Initialize game (no need to preload Web Audio API sounds)
+            initTopicsAndSelection();
+            gameLoop();
+            // Show how-to modal before starting
+            if (selectedTopic) {
+                document.getElementById('rocketHowTo').style.display = 'flex';
+            }
+        }
+
+                function initTopicsAndSelection() {
+                        // Preloaded topics (must match constraints: one-word options, fixed order)
+                                    topics = {
+                                        maths: {
+                                            questions: [
+                                                { question: 'Addition symbol?', options: ['+','-','×','÷'], answer: '+' },
+                                                { question: 'Result of addition?', options: ['sum','diff','prod','quot'], answer: 'sum' },
+                                                { question: 'Subtraction symbol?', options: ['−','×','+','÷'], answer: '−' },
+                                                { question: 'Result of subtraction?', options: ['difference','sum','product','quotient'], answer: 'difference' },
+                                                { question: '7+5=?', options: ['11','12','13','14'], answer: '12' },
+                                                { question: '15−6=?', options: ['7','8','9','10'], answer: '9' }
+                                            ]
+                                        },
+                                        aiAgents: {
+                                            questions: [
+                                                                { question: 'AI Agents sense tool?', options: ['Sensors','Dreams','Noise','Errors'], answer: 'Sensors' },
+                                                                { question: 'AI Agents action tool?', options: ['Actuators','Pixels','Tweets','Notes'], answer: 'Actuators' },
+                                                                { question: 'AI Agents main aim?', options: ['Goal','Chaos','Drift','Idle'], answer: 'Goal' },
+                                                                { question: 'AI Agents reflex example?', options: ['Thermostat','Spoon','Cloud','Printer'], answer: 'Thermostat' },
+                                                                { question: 'AI Agents learn from?', options: ['Data','Magic','Luck','Noise'], answer: 'Data' },
+                                                                { question: 'AI Agents example?', options: ['Chatbot','Stone','Paper','Spoon'], answer: 'Chatbot' }
+                                            ]
+                                        },
+                                        sql: {
+                                            questions: [
+                                                { question: 'Which SQL command creates a new table?', options: ['INSERT','CREATE','SELECT','UPDATE'], answer: 'CREATE' },
+                                                { question: 'Which SQL command retrieves data?', options: ['SELECT','UPDATE','DELETE','DROP'], answer: 'SELECT' },
+                                                { question: 'Command to clear all rows but keep table?', options: ['DELETE','DROP','TRUNCATE','ALTER'], answer: 'TRUNCATE' },
+                                                { question: 'Which command changes existing data?', options: ['INSERT','UPDATE','SELECT','GRANT'], answer: 'UPDATE' },
+                                                { question: 'Command to undo transaction changes?', options: ['COMMIT','ROLLBACK','SAVEPOINT','REVOKE'], answer: 'ROLLBACK' },
+                                                { question: 'SQL clause to filter data?', options: ['GROUP BY','WHERE','ORDER BY','HAVING'], answer: 'WHERE' },
+                                                { question: 'Keyword to sort results?', options: ['GROUP BY','ORDER BY','SORT','ARRANGE'], answer: 'ORDER BY' },
+                                                { question: 'JOIN that returns only matches?', options: ['LEFT JOIN','RIGHT JOIN','INNER JOIN','FULL JOIN'], answer: 'INNER JOIN' },
+                                                { question: 'Command to remove entire table?', options: ['DELETE','DROP','TRUNCATE','REVOKE'], answer: 'DROP' },
+                                                { question: 'Command to give user permissions?', options: ['INSERT','GRANT','REVOKE','SAVEPOINT'], answer: 'GRANT' }
+                                            ]
+                                        },
+                                        lawyer: {
+                                            questions: [
+                                                { question: 'Main role of lawyer?', options: ['Entertainment','Legal advice','Sales','Teaching'], answer: 'Legal advice' },
+                                                { question: 'Defends crime accused?', options: ['Family lawyer','Criminal lawyer','Tax lawyer','Environmental lawyer'], answer: 'Criminal lawyer' },
+                                                { question: 'Highest court in India?', options: ['High Court','District Court','Supreme Court','Sessions Court'], answer: 'Supreme Court' },
+                                                { question: 'Supreme law of India?', options: ['Penal Code','Constitution','Civil Code','Companies Act'], answer: 'Constitution' },
+                                                { question: 'Degree for lawyer?', options: ['MBA','LLB','MBBS','B.Tech'], answer: 'LLB' },
+                                                { question: 'Regulates legal profession?', options: ['Bar Council','Medical Council','Engineering Council','Teaching Council'], answer: 'Bar Council' },
+                                                { question: 'Handles business law?', options: ['Family lawyer','Corporate lawyer','Criminal lawyer','Immigration lawyer'], answer: 'Corporate lawyer' },
+                                                { question: 'Person filing case?', options: ['Defendant','Plaintiff','Witness','Judge'], answer: 'Plaintiff' },
+                                                { question: 'Free legal service?', options: ['Pro bono','Corporate','Retainer','Commercial'], answer: 'Pro bono' },
+                                                { question: 'Visa and citizenship help?', options: ['Tax lawyer','Immigration lawyer','Family lawyer','Criminal lawyer'], answer: 'Immigration lawyer' }
+                                            ]
+                                        },
+                                        python: {
+                                            questions: [
+                                                { question: 'Who created Python?', options: ['Guido van Rossum','Bill Gates','Mark Zuckerberg','Elon Musk'], answer: 'Guido van Rossum' },
+                                                { question: 'Python language type?', options: ['Interpreted','Compiled','Assembly','Machine'], answer: 'Interpreted' },
+                                                { question: 'Python web framework?', options: ['Django','Photoshop','Excel','PowerPoint'], answer: 'Django' },
+                                                { question: 'Python print syntax?', options: ['print(\"Hello\")','echo \"Hello\"','console.log(\"Hello\")','System.out.println(\"Hello\")'], answer: 'print(\"Hello\")' },
+                                                { question: 'Python data analysis library?', options: ['Pandas','jQuery','Bootstrap','React'], answer: 'Pandas' },
+                                                { question: 'Python len() function does?', options: ['Returns length','Deletes items','Sorts list','Creates loop'], answer: 'Returns length' },
+                                                { question: 'Python comment symbol?', options: ['#','//','/* */','--'], answer: '#' },
+                                                { question: 'Define function in Python?', options: ['def function_name():','function function_name()','func function_name()','create function_name()'], answer: 'def function_name():' },
+                                                { question: 'Python ML library?', options: ['TensorFlow','Word','Excel','PowerPoint'], answer: 'TensorFlow' },
+                                                { question: 'Python file extension?', options: ['.py','.txt','.html','.js'], answer: '.py' }
+                                            ]
+                                        },
+                                        cybersecurity: {
+                                            questions: [
+                                                { question: 'Cybersecurity protects?', options: ['Digital systems','Physical buildings','Paper documents','Telephone calls'], answer: 'Digital systems' },
+                                                { question: 'What is phishing?', options: ['Fraudulent emails','Catching fish','Computer virus','Hardware failure'], answer: 'Fraudulent emails' },
+                                                { question: 'Two-factor authentication is?', options: ['Extra security layer','Password manager','Antivirus software','Firewall rule'], answer: 'Extra security layer' },
+                                                { question: 'What is malware?', options: ['Malicious software','Hardware component','Network cable','Security tool'], answer: 'Malicious software' },
+                                                { question: 'DDoS attack does?', options: ['Overwhelms systems','Protects data','Encrypts files','Updates software'], answer: 'Overwhelms systems' },
+                                                { question: 'Firewall purpose?', options: ['Block unauthorized access','Speed up internet','Store passwords','Create backups'], answer: 'Block unauthorized access' },
+                                                { question: 'What is ransomware?', options: ['Malware that encrypts data','Password manager','Security scanner','Backup software'], answer: 'Malware that encrypts data' },
+                                                { question: 'Social engineering means?', options: ['Manipulating people','Building networks','Writing code','Installing software'], answer: 'Manipulating people' },
+                                                { question: 'Ethical hacker does?', options: ['Tests system security','Breaks into systems illegally','Sells stolen data','Creates viruses'], answer: 'Tests system security' },
+                                                { question: 'Software updates should be?', options: ['Installed regularly','Ignored','Deleted','Shared'], answer: 'Installed regularly' }
+                                            ]
+                                        },
+                                        digitalMarketing: {
+                                            questions: [
+                                                { question: 'Digital marketing is?', options: ['Online promotion','Traditional advertising','Print media','Radio broadcasting'], answer: 'Online promotion' },
+                                                { question: 'SEO stands for?', options: ['Search Engine Optimization','Social Event Organization','Software Engineering Online','Sales Executive Office'], answer: 'Search Engine Optimization' },
+                                                { question: 'NOT social media platform?', options: ['MS Excel','Facebook','Instagram','Twitter'], answer: 'MS Excel' },
+                                                { question: 'CTR measures?', options: ['Click-Through Rate','Customer Total Revenue','Content Time Ratio','Call To Register'], answer: 'Click-Through Rate' },
+                                                { question: 'Content marketing goal?', options: ['Provide valuable content','Sell products directly','Collect email addresses','Increase website traffic'], answer: 'Provide valuable content' },
+                                                { question: 'Email marketing used for?', options: ['Communicate with customers','Store customer data','Process payments','Design websites'], answer: 'Communicate with customers' },
+                                                { question: 'PPC stands for?', options: ['Pay-Per-Click','Public Private Company','Personal Profile Creation','Product Price Comparison'], answer: 'Pay-Per-Click' },
+                                                { question: 'ROI measures?', options: ['Return on Investment','Random Online Information','Real Online Identity','Rapid Order Integration'], answer: 'Return on Investment' },
+                                                { question: 'Influencer marketing is?', options: ['Collaborating with popular people','Traditional TV advertising','Print media campaigns','Radio sponsorships'], answer: 'Collaborating with popular people' },
+                                                { question: 'Digital marketing advantage?', options: ['Measurable results','Higher costs','Limited reach','Slower results'], answer: 'Measurable results' }
+                                            ]
+                                        },
+                                        dataScience: {
+                                            questions: [
+                                                { question: 'Data science goal?', options: ['Extract insights from data','Create websites','Design graphics','Write documents'], answer: 'Extract insights from data' },
+                                                { question: 'Popular data science language?', options: ['Python','HTML','CSS','JavaScript'], answer: 'Python' },
+                                                { question: 'Machine learning is?', options: ['Algorithms that learn from data','Computer hardware','Internet connection','Software installation'], answer: 'Algorithms that learn from data' },
+                                                { question: 'Data visualization helps?', options: ['Understanding data patterns','Storing data','Deleting data','Copying data'], answer: 'Understanding data patterns' },
+                                                { question: 'Big data means?', options: ['Large datasets','Small files','Simple calculations','Basic programs'], answer: 'Large datasets' },
+                                                { question: 'First data science step?', options: ['Data collection','Model deployment','Data visualization','Report writing'], answer: 'Data collection' },
+                                                { question: 'Data cleaning is?', options: ['Removing errors from data','Washing computers','Deleting files','Installing software'], answer: 'Removing errors from data' },
+                                                { question: 'Big data tool?', options: ['Hadoop','Notepad','Calculator','Paint'], answer: 'Hadoop' },
+                                                { question: 'Data scientist needs?', options: ['Domain expertise','Cooking skills','Driving license','Art degree'], answer: 'Domain expertise' },
+                                                { question: 'Netflix uses data science for?', options: ['Recommendation system','Video storage','Internet connection','Device manufacturing'], answer: 'Recommendation system' }
+                                            ]
+                                        }
+                                    };
+                        for (const topicData of Object.values(topics)) {
+                            if (!Array.isArray(topicData.questions)) continue;
+                            topicData.questions = topicData.questions.map(question => {
+                                const shorten = value => String(value).trim().match(/[A-Za-z0-9]+/)?.[0] || String(value).trim();
+                                const options = question.options.map(shorten);
+                                const answer = shorten(question.answer);
+                                return new Set(options).size === 4 && options.includes(answer) ? {...question, options, answer} : question;
+                            });
+                        }
+                        try {
+                            const dynamicQuestions = JSON.parse(sessionStorage.getItem('aiplay_dynamic_questions') || 'null');
+                            if (Array.isArray(dynamicQuestions) && dynamicQuestions.length >= 9 && dynamicQuestions.every(q => q && Array.isArray(q.options) && q.options.length === 4 && q.options.includes(q.answer))) {
+                                topics.dynamic = { questions: dynamicQuestions };
+                            }
+                        } catch (error) { console.warn('Unable to load personalised questions.', error); }
+                        selectedTopic = sessionStorage.getItem('aiplay_topic');
+                        const nextIdxStr = sessionStorage.getItem('aiplay_nextIndex');
+                        const g1 = sessionStorage.getItem('aiplay_game1Score');
+                        // Basic guards: if missing, go back to game2 to select topic
+                        if (!selectedTopic || nextIdxStr === null || g1 === null) {
+                                window.location.href = 'game2.html';
+                                return;
+                        }
+                        nextIndex = parseInt(nextIdxStr, 10) || 0;
+                        // Clamp nextIndex to ensure we can show exactly 3 questions
+                        const tsel = topics[selectedTopic];
+                        if (!tsel || nextIndex < 0 || nextIndex > Math.max(0, tsel.questions.length - 3)) {
+                            nextIndex = Math.max(0, (tsel ? tsel.questions.length : 3) - 3);
+                        }
+                        game1Score = parseInt(g1, 10) || 0;
+                }
+
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            const isMobile = document.body.classList.contains('mobile-version');
+            const isWeb = document.body.classList.contains('web-version');
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Get actual container dimensions
+            const containerWidth = container ? container.clientWidth : window.innerWidth;
+            const containerHeight = container ? container.clientHeight : window.innerHeight;
+            
+            // Set canvas dimensions
+            canvas.width = containerWidth * dpr;
+            canvas.height = containerHeight * dpr;
+            canvas.style.width = containerWidth + 'px';
+            canvas.style.height = containerHeight + 'px';
+            
+            // Scale context for high-DPI displays
+            ctx.scale(dpr, dpr);
+            
+            // Position rocket above options for mobile
+            rocket.x = containerWidth / 2;
+            const isMobileDevice = document.body.classList.contains('mobile-version');
+            rocket.y = isMobileDevice ? (containerHeight * 0.45) : (containerHeight / 2); // Optimal position for mobile
+            
+            // Ensure canvas is visible
+            canvas.style.display = 'block';
+        }
+
+        // Main game loop
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            update(deltaTime);
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            gameState = 'playing';
+            game2Score = 0;
+            resolving = false;
+            
+            // Position rocket properly for mobile - between question and options
+            const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+            const isMobileDevice = document.body.classList.contains('mobile-version');
+            rocket.y = isMobileDevice ? (canvasHeight * 0.45) : (canvasHeight / 2);
+            rocket.shake = 0;
+            
+            uiOverlay.style.display = 'none';
+            qIndex = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const t = topics[selectedTopic];
+            const q = t.questions[nextIndex + qIndex];
+            if (!q) { endGame(); return; }
+            question.text = q.question;
+            question.answer = q.answer;
+            answers = q.options.slice(); // fixed order, no shuffle
+        }
+
+        function handleInput(event) {
+            if (gameState !== 'playing') return;
+            processInput(event.clientX, event.clientY);
+        }
+
+        function handleTouchInput(event) {
+            if (gameState !== 'playing') return;
+            event.preventDefault();
+            event.stopPropagation();
+            const touch = event.touches[0] || event.changedTouches[0];
+            if (touch) {
+                processInput(touch.clientX, touch.clientY);
+            }
+        }
+
+        function processInput(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clickX = (clientX - rect.left) * scaleX / (window.devicePixelRatio || 1);
+            const clickY = (clientY - rect.top) * scaleY / (window.devicePixelRatio || 1);
+            
+            const canvasWidth = canvas.width / (window.devicePixelRatio || 1);
+            const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+            
+            // Enhanced mobile-responsive hit detection
+            const isMobileDevice = document.body.classList.contains('mobile-version');
+            const boxWidth = isMobileDevice ? Math.max(80, Math.min(90, canvasWidth / 4.5)) : answerBoxWidth;
+            const boxHeight = isMobileDevice ? Math.max(50, Math.min(60, canvasHeight / 10)) : answerBoxHeight;
+            const margin = isMobileDevice ? Math.max(6, canvasWidth / 50) : answerBoxMargin;
+            
+            const totalWidth = (boxWidth * 4) + (margin * 3);
+            const startX = (canvasWidth - totalWidth) / 2;
+            const boxY = canvasHeight - boxHeight - (isMobileDevice ? Math.max(100, canvasHeight / 6) : 40);
+
+            answers.forEach((ans, index) => {
+                const boxX = startX + index * (boxWidth + margin);
+                if (clickX > boxX && clickX < boxX + boxWidth &&
+                    clickY > boxY && clickY < boxY + boxHeight) {
+                    
+                    if (String(ans) === String(question.answer)) {
+                        handleCorrectAnswer();
+                    } else {
+                        handleWrongAnswer();
+                    }
+                }
+            });
+        }
+
+        function handleCorrectAnswer() {
+            playCorrectChime();
+            setTimeout(() => {
+                playRocketLaunch();
+            }, 200);
+            gameState = 'launching';
+            rocket.withFire = true;
+            rocket.animFrame = 0;
+        }
+
+        function handleWrongAnswer() {
+            playWrongBuzz();
+            setTimeout(() => {
+                playCrashThud();
+            }, 300);
+            gameState = 'crashing';
+            rocket.withFire = false;
+            rocket.animFrame = 0;
+            rocket.fallingSpeed = 0;
+            rocket.shake = 20;
+            rocket.opacity = 1.0; // Start with full opacity
+            rocket.fadeSpeed = 0.5; // Fade rate
+        }
+
+        function update(deltaTime) {
+            switch (gameState) {
+                case 'launching':
+                    rocket.animFrame += deltaTime * 1.5;
+                    rocket.y -= rocket.animFrame * 200 * deltaTime; // Faster upward movement
+                    rocket.opacity = 1.0; // Ensure full opacity during launch
+                    if (rocket.y < -rocket.h && !resolving) {
+                        resolving = true;
+                        // Count a correct and advance or finish
+                        game2Score += 1;
+                        gameState = 'transition';
+                        proceedAfterAnswer(true);
+                    }
+                    break;
+                case 'crashing':
+                    if (rocket.animFrame < 1) {
+                         // Initial upward bounce with fire effect
+                        rocket.animFrame += deltaTime * 2;
+                        rocket.y -= Math.sin(rocket.animFrame * Math.PI) * 50 * deltaTime;
+                        rocket.withFire = true; // Show fire during crash
+                    } else {
+                        // Fade out and fall
+                        rocket.withFire = false;
+                        rocket.opacity -= rocket.fadeSpeed * deltaTime;
+                        rocket.fallingSpeed += 9.8 * deltaTime * 8;
+                        rocket.y += rocket.fallingSpeed * deltaTime;
+                        
+                        // Ensure opacity doesn't go below 0
+                        if (rocket.opacity < 0) rocket.opacity = 0;
+                    }
+                    
+                    const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+                    if (rocket.y > canvasHeight + rocket.h && !resolving) {
+                        resolving = true;
+                        gameState = 'transition';
+                        proceedAfterAnswer(false);
+                    }
+                    break;
+                case 'playing':
+                    if (rocket.shake > 0) {
+                        rocket.shake -= deltaTime * 10;
+                    }
+                    break;
+            }
+        }
+
+        function proceedAfterAnswer(correct) {
+            // brief pause, then next or end
+            setTimeout(() => {
+                const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+                const isMobileDevice = document.body.classList.contains('mobile-version');
+                rocket.y = isMobileDevice ? (canvasHeight * 0.45) : (canvasHeight / 2);
+                rocket.withFire = false;
+                rocket.animFrame = 0;
+                rocket.fallingSpeed = 0;
+                rocket.shake = 0;
+                rocket.opacity = 1.0; // Reset opacity
+                rocket.fadeSpeed = 0;
+                qIndex = Math.min(qCountGame2, qIndex + 1);
+                if (qIndex >= qCountGame2) {
+                    endGame();
+                } else {
+                    gameState = 'playing';
+                    loadQuestion();
+                    uiOverlay.style.display = 'none';
+                }
+                resolving = false;
+            }, 500);
+        }
+
+        function showEndMessage(msg) {
+            uiOverlay.style.display = 'flex';
+            gameMessage.innerText = msg;
+            gameMessage.style.display = 'block';
+            startButton.style.display = 'none';
+        }
+
+        function endGame() {
+            // Save Rocket game score for next game
+            sessionStorage.setItem('aiplay_game2Score', String(game2Score));
+            
+            // Navigate to Game 3 (Fishing)
+            window.location.href = 'game3.html';
+        }
+
+        // Drawing functions
+        function drawRocket(x, y, w, h, withFire) {
+            ctx.save();
+            ctx.globalAlpha = rocket.opacity || 1.0; // Apply opacity
+            ctx.translate(x, y);
+
+            if (rocket.shake > 0) {
+                ctx.translate(Math.random() * rocket.shake - rocket.shake / 2, Math.random() * rocket.shake - rocket.shake / 2);
+            }
+            
+            // Rocket body
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2); // Top point
+            ctx.lineTo(w / 4, h / 2); // Right base
+            ctx.lineTo(-w / 4, h / 2); // Left base
+            ctx.closePath();
+            ctx.fillStyle = "#A9A9A9"; // Dark Gray
+            ctx.fill();
+
+            // Cockpit Window
+            ctx.beginPath();
+            ctx.arc(0, -h / 4, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#ADD8E6"; // Light Blue
+            ctx.fill();
+
+            // Fins
+            ctx.beginPath();
+            ctx.moveTo(w / 4, h / 2);
+            ctx.lineTo(w / 4 + 15, h / 2 + 15);
+            ctx.lineTo(w / 4 + 15, h / 2 + 5);
+            ctx.closePath();
+            ctx.fillStyle = "#808080"; // Gray
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(-w / 4, h / 2);
+            ctx.lineTo(-w / 4 - 15, h / 2 + 15);
+            ctx.lineTo(-w / 4 - 15, h / 2 + 5);
+            ctx.closePath();
+            ctx.fillStyle = "#808080";
+            ctx.fill();
+
+            // Engine Flame
+            if (withFire) {
+                const flameHeight = Math.random() * 30 + 30;
+                ctx.beginPath();
+                ctx.moveTo(-w / 4, h / 2);
+                ctx.lineTo(w / 4, h / 2);
+                ctx.lineTo(0, h / 2 + flameHeight);
+                ctx.closePath();
+                const flameGradient = ctx.createLinearGradient(0, h / 2, 0, h / 2 + flameHeight);
+                flameGradient.addColorStop(0, '#FF4500'); // Orange Red
+                flameGradient.addColorStop(0.5, '#FFD700'); // Gold
+                flameGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = flameGradient;
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+
+        function drawAnswers() {
+            const canvasWidth = canvas.width / (window.devicePixelRatio || 1);
+            const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+            
+            // Enhanced mobile detection and sizing
+            const isMobile = document.body.classList.contains('mobile-version');
+            const boxWidth = isMobile ? Math.max(80, Math.min(90, canvasWidth / 4.5)) : answerBoxWidth;
+            const boxHeight = isMobile ? Math.max(50, Math.min(60, canvasHeight / 10)) : answerBoxHeight;
+            const margin = isMobile ? Math.max(6, canvasWidth / 50) : answerBoxMargin;
+            const fontSize = isMobile ? Math.max(14, Math.min(18, boxWidth / 5)) : 24;
+            
+            const totalWidth = (boxWidth * 4) + (margin * 3);
+            const startX = (canvasWidth - totalWidth) / 2;
+            const boxY = canvasHeight - boxHeight - (isMobile ? Math.max(120, canvasHeight / 5) : 40); // Even lower for mobile
+            
+            answers.forEach((ans, index) => {
+                const boxX = startX + index * (boxWidth + margin);
+                
+                // Draw box
+                ctx.fillStyle = gray;
+                ctx.beginPath();
+                ctx.roundRect(boxX, boxY, boxWidth, boxHeight, isMobile ? 6 : 10);
+                ctx.fill();
+                ctx.lineWidth = isMobile ? 1 : 2;
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.stroke();
+                
+                // Draw text with responsive font
+                ctx.fillStyle = darkBlue;
+                ctx.font = `${fontSize}px "Nunito"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Handle long text on mobile
+                const text = String(ans);
+                let fittedSize = fontSize;
+                while (ctx.measureText(text).width > boxWidth - 12 && fittedSize > 10) {
+                    fittedSize -= 1;
+                    ctx.font = `${fittedSize}px "Nunito"`;
+                }
+                ctx.fillText(text, boxX + boxWidth / 2, boxY + boxHeight / 2, boxWidth - 12);
+            });
+        }
+        
+        function draw() {
+            const canvasWidth = canvas.width / (window.devicePixelRatio || 1);
+            const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+            
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            if (gameState !== 'start') {
+                drawRocket(rocket.x, rocket.y, rocket.w, rocket.h, rocket.withFire);
+
+                if (gameState === 'playing' || gameState === 'crashing') {
+                    // Draw question text with enhanced mobile responsiveness
+                    const isMobile = document.body.classList.contains('mobile-version');
+                    const questionFontSize = isMobile ? Math.max(16, Math.min(20, canvasWidth / 25)) : 40;
+                    const questionY = isMobile ? Math.max(40, canvasHeight / 15) : 80;
+                    
+                    ctx.font = `bold ${questionFontSize}px "Poppins"`;
+                    ctx.fillStyle = white;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                    ctx.lineWidth = 2;
+                    
+                    // Handle long questions on mobile with better wrapping
+                    const text = question.text;
+                    if (isMobile && text.length > 15) {
+                        const words = text.split(' ');
+                        const mid = Math.ceil(words.length / 2);
+                        const line1 = words.slice(0, mid).join(' ');
+                        const line2 = words.slice(mid).join(' ');
+                        
+                        // Draw with stroke for better visibility
+                        ctx.strokeText(line1, canvasWidth / 2, questionY);
+                        ctx.fillText(line1, canvasWidth / 2, questionY);
+                        if (line2) {
+                            ctx.strokeText(line2, canvasWidth / 2, questionY + questionFontSize + 8);
+                            ctx.fillText(line2, canvasWidth / 2, questionY + questionFontSize + 8);
+                        }
+                    } else {
+                        ctx.strokeText(text, canvasWidth / 2, questionY);
+                        ctx.fillText(text, canvasWidth / 2, questionY);
+                    }
+
+                    drawAnswers();
+                }
+            }
+        }
+
+        // ENHANCED MOBILE DETECTION SYSTEM
+        function detectMobileDevice() {
+            const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const isSmallScreen = window.innerWidth <= 768;
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobileScreen = window.innerWidth < 1024; // More accurate mobile detection
+            
+            return {
+                isMobile: isMobileUA || (isTouchDevice && isSmallScreen) || isMobileScreen,
+                isTouch: isTouchDevice,
+                isPortrait: isPortrait,
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                deviceType: isMobileUA || isMobileScreen ? 'mobile' : 'desktop'
+            };
+        }
+
+        // AUTO-APPLY MOBILE VERSION
+        function initializeMobileOptimization() {
+            const deviceInfo = detectMobileDevice();
+            
+            // Always auto-detect and apply appropriate version
+            if (deviceInfo.isMobile) {
+                document.body.classList.add('mobile-version', 'mobile-detected');
+                console.log('Mobile device detected - applying mobile full-screen version');
+            } else {
+                document.body.classList.add('web-version');
+                console.log('Desktop device detected - applying web version');
+            }
+            
+            // Trigger canvas resize after version is set
+            setTimeout(() => {
+                resizeCanvas();
+            }, 100);
+        }
+
+        // VERSION TOGGLE FUNCTIONALITY
+        function updateToggleButton(currentMode) {
+            const button = document.getElementById('versionToggle');
+            if (!button) return; // Safety check
+            if (currentMode === 'mobile') {
+                button.innerHTML = '🖥️';
+                button.title = 'Switch to Web Version (Desktop)';
+                button.classList.remove('web-mode');
+                showModeNotification('🚀 Instagram Reel Mobile Format Active');
+            } else {
+                button.innerHTML = '📱';
+                button.title = 'Switch to Mobile Version (Instagram Reel Format)';
+                button.classList.add('web-mode');
+                showModeNotification('🖥️ Desktop Web Format Active');
+            }
+        }
+
+        // VISUAL FEEDBACK FOR MODE SWITCHING
+        function showModeNotification(message) {
+            const existing = document.querySelector('.mode-notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'mode-notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed; top: 80px; right: 15px;
+                background: rgba(255, 207, 84, 0.95); color: #1c273a;
+                padding: 10px 15px; border-radius: 25px; font-size: 14px; font-weight: bold;
+                z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        // AUTO-INITIALIZE ON PAGE LOAD
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileOptimization();
+            adjustCanvasForMobile();
+            
+            // Initialize canvas and rocket after mobile detection
+            setTimeout(() => {
+                resizeCanvas();
+                if (typeof draw === 'function') {
+                    draw(); // Initial draw to show rocket
+                }
+            }, 100);
+        });
+
+        // RESPONSIVE CANVAS ADJUSTMENT
+        function adjustCanvasForMobile() {
+            const deviceInfo = detectMobileDevice();
+            if (deviceInfo.isMobile && document.body.classList.contains('mobile-version')) {
+                resizeCanvas();
+            }
+        }
+
+        // WINDOW RESIZE HANDLER
+        window.addEventListener('resize', function() {
+            adjustCanvasForMobile();
+        });
+
+    </script>
+</body>
+</html>

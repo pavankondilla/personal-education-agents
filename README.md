@@ -53,3 +53,11 @@ Run `npm start`, then open `http://127.0.0.1:4173/`. The home page has **Sign in
 Account and learning records are stored in SQLite at `data/aiplay.sqlite` by default. An existing `data/aiplay-data.json` file is imported once and retained. Set `DATA_DIR` to a backed-up persistent volume for hosted deployments; the current free Render configuration does **not** guarantee that local files survive a redeploy. Keep the database and its WAL/SHM files private and back up the entire data directory together.
 
 The dashboard is at `http://127.0.0.1:4173/dashboard.html`. It shows each signed-in student's topics, activity today, chat questions/answers, completed game rounds, accuracy, and rematches. Game activity requires completing a game; leaving a game early does not count as a completed round.
+
+## Render deployment
+
+[Deploy this repository to Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fpavankondilla%2Fpersonal-education-agents)
+
+The repository's `render.yaml` creates a Node web service, installs locked dependencies with `npm ci`, runs syntax checks, starts `node server.js`, and checks `/healthz`. Set `NVIDIA_API_KEY` in Render before expecting AI lessons or question-paper image extraction to work. The checked-in `.node-version` pins the Node 24 runtime used by the server.
+
+Render's free web service has ephemeral local storage. Sign-in and the dashboard can run there, but student accounts and learning records stored in SQLite will be lost on a restart or redeploy. For lasting student accounts, attach a persistent disk to a paid Render web service and set `DATA_DIR` to its mount path, or migrate the store to a durable hosted database. Do not move real users to the free configuration and describe it as permanent storage.

@@ -27,6 +27,7 @@
         if(order.includes(id)&&order[0]!==id){const first=document.createElement('button');first.type='button';first.className='ai-provider-first';first.textContent='Use first';first.setAttribute('aria-label',`Use ${info?.label||id} first`);first.addEventListener('click',()=>{order=[id,...order.filter(item=>item!==id)];save();render();document.dispatchEvent(new Event('aiplay-ai-settings-changed'));});row.append(first);}
         panel.append(row);
       }
+      const demo=document.createElement('button');demo.type='button';demo.className='ai-demo-button';demo.textContent='Explore demo topics';demo.addEventListener('click',()=>window.AiplayDemo?.prompt());panel.append(demo);
       const foot=document.createElement('p');foot.className='ai-settings-foot';foot.textContent='Keys stay on the server. Choices are saved in this browser. Grok API usage is not guaranteed free.';panel.append(foot);
     }
   }

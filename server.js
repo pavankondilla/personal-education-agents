@@ -156,7 +156,7 @@ async function chatReply(topic,level,history,message,context,order) {
 }
 async function apiStatus(order) {
   let result;
-  try { const answer=await callModel([{role:'user',content:'Reply with the single word READY.'}],{timeout:18000,maxTokens:8,temperature:0,order,withProvider:true});result={ok:true,message:`${providerLabels[answer.provider]} is responding`,activeProvider:answer.provider}; }
+  try { const answer=await callModel([{role:'user',content:'Reply with the single word READY.'}],{timeout:18000,maxTokens:64,temperature:0,order,withProvider:true});result={ok:true,message:`${providerLabels[answer.provider]} is responding`,activeProvider:answer.provider}; }
   catch(error){result={ok:false,message:cleanText(error.message,160)||'AI is unavailable'};}
   return {...result,providers:providerStatus(),checkedAt:new Date().toISOString()};
 }

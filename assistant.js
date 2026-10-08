@@ -17,6 +17,7 @@
   lesson=study.read('aiplay_last_lesson',null);
   try{topic=sessionStorage.getItem('aiplay_current_topic')||'';}catch{}
   let lessonLoaded=Boolean(topic&&lesson&&Array.isArray(lesson.steps)&&lesson.steps.length);
+  let demoActive=sessionStorage.getItem('aiplay_demo_active')==='true';
   const headings=['The Concept:','Where It Lives (Real-World Use)','The "Apocalypse" Test (What Breaks?)','The Trade-offs (Pros vs. Cons)','The Ultimate Analogy'];
 
   function validBank(bank){return Array.isArray(bank)&&bank.length===9&&bank.every(q=>q&&typeof q.question==='string'&&typeof q.objective==='string'&&typeof q.evidence==='string'&&Array.isArray(q.options)&&q.options.length===4&&new Set(q.options.map(x=>String(x).toLowerCase())).size===4&&q.options.every(x=>typeof x==='string'&&/^[A-Za-z0-9.+-]{1,16}$/.test(x))&&q.options.includes(q.answer));}
@@ -74,7 +75,7 @@
     roadmap.active=index;roadmap.reviewing=Boolean(roadmap.topics[index].learned);lesson=null;lessonLoaded=false;questions=[];progress={done:[],attempts:{},cleanStreak:0};sessionStorage.removeItem('aiplay_last_lesson');sessionStorage.removeItem('aiplay_dynamic_questions');setTopic('');$('#lessonPath').hidden=true;$('#gameReady').hidden=true;save();renderRoadmap();ask(roadmap.topics[index].title);
   }
   function finishRoadmapTopic(){
-    if(context.agent!=='exam'||!roadmap||!complete())return;
+    if(demoActive||context.agent!=='exam'||!roadmap||!complete())return;
     const item=roadmap.topics[roadmap.active];if(!item)return;
     if(roadmap.reviewing)item.reviewed=true;else item.learned=true;
     roadmap.reviewing=false;save();renderRoadmap();
@@ -88,12 +89,12 @@
       const card=document.createElement('article');card.className=`lesson-step${done?' done':''}${active?' active':''}`;
       const heading=document.createElement('div');heading.className='step-heading';const badge=document.createElement('span');badge.textContent=done?'✓':String(index+1).padStart(2,'0');const h3=document.createElement('h3');h3.textContent=step.objective;heading.append(badge,h3);if(context.agent==='teacher'){const difficulty=document.createElement('small');difficulty.className='step-difficulty';difficulty.textContent=index===0?'EASY':index===lesson.steps.length-1?'HARD':'MEDIUM';heading.append(difficulty);}card.append(heading);
       if(done||active){textBlock(card,'Understand',step.explanation);textBlock(card,'Worked example',step.example);textBlock(card,'Watch for this mistake',step.misconception);if(done)textBlock(card,'Why that check works',step.check.explanation);}
-      if(active){const question=document.createElement('p');question.className='step-question';question.textContent=step.check.question;card.append(question);const options=document.createElement('div');options.className='step-options';const feedback=document.createElement('p');feedback.className='step-feedback';feedback.setAttribute('role','status');step.check.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.textContent=option;button.addEventListener('click',()=>{if(option!==step.check.answer){progress.attempts[step.id]=(progress.attempts[step.id]||0)+1;progress.cleanStreak=0;context.level='Beginner';feedback.textContent=progress.attempts[step.id]===1?`Try again. Hint: ${step.misconception} Revisit the worked example above.`:`Let's slow down. ${step.explanation} ${step.example} ${step.check.explanation}`;feedback.classList.add('incorrect');save();return;}progress.cleanStreak=progress.attempts[step.id]?0:(progress.cleanStreak||0)+1;if(context.agent==='teacher')context.level=progress.cleanStreak>=2?'Advanced':progress.cleanStreak===1?'Intermediate':'Beginner';progress.done.push(step.id);save();renderLessonPath();showGames();if(complete()){finishRoadmapTopic();prepareGames();}scrollDown();});options.append(button);});card.append(options,feedback);}
+      if(active){const question=document.createElement('p');question.className='step-question';question.textContent=step.check.question;card.append(question);const options=document.createElement('div');options.className='step-options';const feedback=document.createElement('p');feedback.className='step-feedback';feedback.setAttribute('role','status');step.check.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.textContent=option;button.addEventListener('click',()=>{if(option!==step.check.answer){progress.attempts[step.id]=(progress.attempts[step.id]||0)+1;progress.cleanStreak=0;context.level='Beginner';feedback.textContent=progress.attempts[step.id]===1?`Try again. Hint: ${step.misconception} Revisit the worked example above.`:`Let's slow down. ${step.explanation} ${step.example} ${step.check.explanation}`;feedback.classList.add('incorrect');save();return;}progress.cleanStreak=progress.attempts[step.id]?0:(progress.cleanStreak||0)+1;if(context.agent==='teacher')context.level=progress.cleanStreak>=2?'Advanced':progress.cleanStreak===1?'Intermediate':'Beginner';progress.done.push(step.id);save();renderLessonPath();showGames();if(complete()){finishRoadmapTopic();if(!validBank(questions))prepareGames();}scrollDown();});options.append(button);});card.append(options,feedback);}
       if(!done&&!active){const locked=document.createElement('p');locked.className='step-locked';locked.textContent='Complete the previous step to continue.';card.append(locked);}
       root.append(card);
     });
   }
-  async function prepareGames(){if(!complete()||busy)return;setBusy(true);$('#startGames').disabled=true;$('#startGames').firstChild.textContent='Preparing questions… ';try{const payload=await requestReply('/api/questions',{lesson,studyContext:context});if(!validBank(payload.questions))throw new Error('The questions were incomplete. Please retry.');questions=payload.questions;save();showGames();}catch(error){$('#inputError').textContent=error.message||'Could not prepare the games. Please retry.';$('#startGames').firstChild.textContent='Retry game preparation ';}finally{setBusy(false);}}
+  async function prepareGames(){if(!complete()||busy)return;if(demoActive){showGames();return;}setBusy(true);$('#startGames').disabled=true;$('#startGames').firstChild.textContent='Preparing questions… ';try{const payload=await requestReply('/api/questions',{lesson,studyContext:context});if(!validBank(payload.questions))throw aiError('The questions were incomplete. Please retry.');questions=payload.questions;save();showGames();}catch(error){$('#inputError').textContent=error.message||'Could not prepare the games. Please retry.';$('#startGames').firstChild.textContent='Retry game preparation ';if(error.aiFailure)window.AiplayDemo?.prompt(error);}finally{setBusy(false);}}
   function renderAgentControls(){
     for(const selector of ['#sidebarAgents','#mobileAgents']){
       const target=$(selector);Object.values(agents).forEach(agent=>{
@@ -115,13 +116,15 @@
     renderRoadmap();
     if(changed&&announce){setMood('idle');const note=document.createElement('p');note.className='context-notice';note.textContent=`${agent.name} is here. Your conversation stays with you.`;conversation.append(note);scrollDown();}
   }
+  function aiError(message){const error=new Error(message);error.aiFailure=true;return error;}
   async function requestReply(path,body){
-    const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',...window.AiplayAISettings?.headers()},body:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/image-topic'?190000:220000)});
-    let payload;try{payload=await response.json();}catch{throw new Error('The tutor service did not return a readable response. Check the AI status and retry.');}
-    if(!response.ok)throw new Error(payload.error||'The tutor service is unavailable. Please retry.');return payload;
+    let response;try{response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',...window.AiplayAISettings?.headers()},body:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/image-topic'?190000:220000)});}catch(error){throw aiError(error.name==='TimeoutError'?'The AI request timed out.':'The AI service could not be reached.');}
+    let payload;try{payload=await response.json();}catch{throw aiError('The tutor service did not return a readable response. Check the AI status and retry.');}
+    if(!response.ok)throw aiError(payload.error||'The tutor service is unavailable. Please retry.');return payload;
   }
   async function ask(message,retry=false){
     if(busy)return;if(message.length<2||message.length>study.maxInput){$('#inputError').textContent='Ask a question between 2 and 20,000 characters.';return;}
+    if(demoActive){const answer=window.AiplayDemo.answer(message,lesson);if(!retry)appendMessage('user',message);appendMessage('assistant',answer,{agent:context.agent});history.push({role:'user',content:message,agent:context.agent},{role:'assistant',content:answer,agent:context.agent});save();input.focus();return;}
     $('#inputError').textContent='';$('#attachmentNote').textContent='';setBusy(true);setMood('thinking');
     const agentId=context.agent,firstLesson=!lessonLoaded;if(!retry)appendMessage('user',message);
     const pending=appendMessage('assistant',lessonLoaded?'Let me connect that to what we’ve discussed…':'I’m working through your question and preparing your practice…',{pending:true,agent:agentId});
@@ -131,22 +134,37 @@
         setTopic(message);
         const payload=await requestReply('/api/lesson',{topic:message,level:context.level,studyContext:context});
         const data=payload.lesson;
-        if(!data||!data.title||!data.summary||!Array.isArray(data.steps)||data.steps.length<3||data.steps.some(step=>!step.objective||!step.explanation||!step.example||!step.check))throw new Error('The lesson was incomplete. Please retry so Mira can prepare the full learning path.');
+        if(!data||!data.title||!data.summary||!Array.isArray(data.steps)||data.steps.length<3||data.steps.some(step=>!step.objective||!step.explanation||!step.example||!step.check))throw aiError('The lesson was incomplete. Please retry so Mira can prepare the full learning path.');
         lesson=data;questions=[];progress={done:[],attempts:{},cleanStreak:0};answer=`${data.summary}\n\nI’ve prepared ${data.steps.length} steps. Work through each check to unlock practice.`;setTopic(data.title);lessonLoaded=true;sessionStorage.removeItem('aiplay_lesson_request');
       }else{
         const recent=history.filter(item=>item.agent===agentId).slice(-8).map(item=>({role:item.role,content:item.content.slice(0,8000)}));
         const payload=await requestReply('/api/chat',{topic,level:context.level,studyContext:context,history:recent,message});
-        if(typeof payload.answer!=='string'||!headings.every(heading=>payload.answer.includes(`### ${heading}`)))throw new Error('The reply did not contain the full learning framework. Please retry.');
+        if(typeof payload.answer!=='string'||!headings.every(heading=>payload.answer.includes(`### ${heading}`)))throw aiError('The reply did not contain the full learning framework. Please retry.');
         answer=payload.answer;
       }
       pending.remove();const responseRow=appendMessage('assistant',answer,{framework:!firstLesson,agent:agentId});
       const sprite=responseRow.querySelector('.mira-sprite');sprite.dataset.static='false';sprite.dataset.state='speaking';
       history.push({role:'user',content:message,agent:agentId},{role:'assistant',content:answer,agent:agentId});
       save();renderLessonPath();renderRoadmap();showGames();setMood(firstLesson?'celebrating':'speaking');moodTimer=setTimeout(()=>{setMood('idle');sprite.dataset.static='true';sprite.dataset.state='idle';},5000);
-    }catch(error){pending.remove();const messageText=error.name==='TimeoutError'?'This response is taking longer than expected. Please try again.':error.message==='Failed to fetch'?'The tutor could not connect. Check the AI status button and retry.':error.message;appendMessage('assistant',messageText,{error:true,retry:message,agent:agentId});setMood('idle');}
+    }catch(error){pending.remove();const messageText=error.name==='TimeoutError'?'This response is taking longer than expected. Please try again.':error.message==='Failed to fetch'?'The tutor could not connect. Check the AI status button and retry.':error.message;appendMessage('assistant',messageText,{error:true,retry:message,agent:agentId});setMood('idle');if(error.aiFailure)window.AiplayDemo?.prompt(error);}
     finally{setBusy(false);selectAgent(context.agent);input.focus();scrollDown();}
   }
-  function reset(){if(busy)return;['aiplay_lesson_request','aiplay_chat_history','aiplay_current_topic','aiplay_dynamic_questions','aiplay_assistant_launch','aiplay_assistant_active','aiplay_last_lesson','aiplay_lesson_progress','aiplay_exam_roadmap'].forEach(key=>sessionStorage.removeItem(key));location.assign('assistant.html');}
+  function reset(){if(busy)return;['aiplay_lesson_request','aiplay_chat_history','aiplay_current_topic','aiplay_dynamic_questions','aiplay_assistant_launch','aiplay_assistant_active','aiplay_last_lesson','aiplay_lesson_progress','aiplay_exam_roadmap','aiplay_demo_request','aiplay_demo_active','aiplay_demo_topic_id'].forEach(key=>sessionStorage.removeItem(key));location.assign('assistant.html');}
+  function renderDemoNotice(){
+    if(!demoActive)return;
+    const note=document.createElement('div');note.className='demo-notice';const title=document.createElement('b');title.textContent='Demo mode · prewritten lesson';const detail=document.createElement('p');detail.textContent='This topic, its checks, and all three games work without an AI provider. Custom AI answers are unavailable here.';
+    const another=document.createElement('button');another.type='button';another.textContent='Choose another demo';another.addEventListener('click',()=>window.AiplayDemo.prompt());
+    const online=document.createElement('button');online.type='button';online.textContent='Try AI again';online.addEventListener('click',reset);
+    note.append(title,detail,another,online);conversation.prepend(note);
+  }
+  function loadDemo(id){
+    const demo=window.AiplayDemo?.get(id);if(!demo)return false;
+    demoActive=true;lesson=demo.lesson;questions=demo.questions;lessonLoaded=true;roadmap=null;progress={done:[],attempts:{},cleanStreak:0};
+    const welcome=`${lesson.summary}\n\nThis is a prewritten demo. Work through the three checks below to unlock Bubble, Rocket, and Fishing.`;
+    history=[{role:'assistant',content:welcome,agent:context.agent}];
+    sessionStorage.removeItem('aiplay_lesson_request');sessionStorage.removeItem('aiplay_demo_request');sessionStorage.setItem('aiplay_demo_topic_id',id);sessionStorage.setItem('aiplay_demo_active','true');
+    study.write('aiplay_dynamic_questions',questions);setTopic(lesson.title);save();renderDemoNotice();appendMessage('assistant',welcome,{agent:context.agent});renderLessonPath();showGames();scrollDown();return true;
+  }
   $('#chatForm').addEventListener('submit',event=>{event.preventDefault();const message=input.value.trim();if(busy)return;if(message.length<2){$('#inputError').textContent='Type your topic or question to start.';input.focus();return;}input.value='';input.style.height='auto';ask(message);});
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();$('#chatForm').requestSubmit();}});
   input.addEventListener('input',()=>{input.style.height='auto';input.style.height=`${Math.min(input.scrollHeight,130)}px`;$('#inputError').textContent='';});
@@ -160,20 +178,22 @@
       if(study.isImage(file)){
         const image=await study.imageData(file);
         const payload=await requestReply('/api/image-topic',{image});
-        if(typeof payload.summary!=='string'||!payload.summary.trim())throw new Error('No readable questions found. Try a clearer image.');
+        if(typeof payload.summary!=='string'||!payload.summary.trim())throw aiError('No readable questions found. Try a clearer image.');
         notes=`Question paper from ${image.name}:\n${payload.summary}`;
       }else notes=await study.notes(file);
       const combined=input.value.trim()?`${input.value.trim()}\n\n${notes}`:notes;
       if(combined.length>study.maxInput)throw new Error('Your question and paper exceed 20,000 characters. Attach a smaller section.');
       input.value=combined;input.dispatchEvent(new Event('input'));
       $('#attachmentNote').textContent=`${file.name} attached. Review the questions and numbers, then send.`;
-    }catch(error){$('#inputError').textContent=study.uploadError(error);$('#attachmentNote').textContent='Upload unsuccessful. Your existing text is unchanged.';}
+    }catch(error){$('#inputError').textContent=study.uploadError(error);$('#attachmentNote').textContent='Upload unsuccessful. Your existing text is unchanged.';if(error.aiFailure)window.AiplayDemo?.prompt(error);}
     finally{event.target.value='';input.readOnly=false;setBusy(false);input.focus();}
   });
   $('#newChat').addEventListener('click',reset);$('#mobileNewChat').addEventListener('click',reset);$('#clearTopic').addEventListener('click',reset);
   $('#startGames').addEventListener('click',()=>{if(busy||!complete())return;if(!validBank(questions)){prepareGames();return;}study.write('aiplay_dynamic_questions',questions);sessionStorage.setItem('aiplay_assistant_launch','dynamic');sessionStorage.setItem('aiplay_assistant_active','true');location.assign('game2.html');});
   renderAgentControls();selectAgent(context.agent);
-  if(typeof request.topic==='string'&&request.topic.trim()){history=[];questions=[];lesson=null;progress={done:[]};lessonLoaded=false;ask(request.topic.trim());}
-  else if(lessonLoaded){setTopic(topic);history.forEach((item,index)=>appendMessage(item.role,item.content,{framework:item.role==='assistant'&&index>1,agent:item.agent}));renderRoadmap();renderLessonPath();showGames();scrollDown();}
+  const requestedDemo=sessionStorage.getItem('aiplay_demo_request');
+  if(requestedDemo&&loadDemo(requestedDemo)){}
+  else if(typeof request.topic==='string'&&request.topic.trim()){demoActive=false;sessionStorage.removeItem('aiplay_demo_active');history=[];questions=[];lesson=null;progress={done:[]};lessonLoaded=false;ask(request.topic.trim());}
+  else if(lessonLoaded){setTopic(topic);renderDemoNotice();history.forEach((item,index)=>appendMessage(item.role,item.content,{framework:!demoActive&&item.role==='assistant'&&index>1,agent:item.agent}));renderRoadmap();renderLessonPath();showGames();scrollDown();}
   else{history=[];questions=[];lesson=null;setTopic('');}
 })();

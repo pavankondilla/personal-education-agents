@@ -1,0 +1,79 @@
+(() => {
+  const topics=[
+    {
+      id:'fractions',title:'Fractions (Demo)',summary:'Learn what fraction parts mean, how equal fractions work, and how to add simple fractions.',
+      prerequisites:'You only need to count whole objects and equal parts.',history:'Fractions describe equal shares of a whole and have been used for measuring and sharing for thousands of years.',industry:'Recipes, measurements, and budgets all use fractional quantities.',insights:'A fraction is meaningful only when the parts are equal. You cannot add unlike denominators without first naming equal-sized parts.',timeline:'First read the parts, then recognize equivalent fractions, then add with a common denominator.',
+      steps:[
+        {objective:'Read the parts of a fraction',explanation:'In a fraction such as 3/4, the numerator 3 counts the selected parts. The denominator 4 tells how many equal parts make one whole. Imagine a pizza cut into four equal slices: three slices are 3/4 of that pizza. Unequal slices do not represent equal fractional parts.',example:'A bar is divided into 4 equal sections and 3 are shaded. The fraction shaded is 3/4: 3 is the numerator and 4 is the denominator.',misconception:'The denominator is not the number selected; it is the number of equal parts in one whole.',check:{question:'In 3/4, which number is the numerator?',options:['3','4','7','1'],answer:'3',explanation:'The numerator is the top number, 3, counting selected parts.'}},
+        {objective:'Recognize equivalent fractions',explanation:'Equivalent fractions name the same amount with differently sized equal parts. Multiply both the numerator and denominator by the same nonzero number to keep the value equal: 1/2 becomes 2/4. Both are 0.5 of a whole. Changing only one part changes the value.',example:'Take half a pizza, then split every original half into two slices. You still have half the pizza, now written as 2/4 = 0.5.',misconception:'Multiplying only the numerator does not make an equivalent fraction; both numbers must change by the same factor.',check:{question:'What decimal value equals 1/2?',options:['0.5','0.25','0.75','2'],answer:'0.5',explanation:'One half is 0.5, the same amount as two fourths.'}},
+        {objective:'Add fractions with a common denominator',explanation:'To add 1/2 and 1/4, first rewrite 1/2 as 2/4. Now both fractions use fourths, so add the numerators: 2/4 + 1/4 = 3/4. Keep the common denominator 4 because the size of each part stays a fourth. The total is less than one whole.',example:'For a recipe, 1/2 cup plus 1/4 cup equals 2/4 cup plus 1/4 cup, or 3/4 cup. The shared denominator is 4.',misconception:'Do not add denominators: 1/2 + 1/4 is 3/4, not 2/6.',check:{question:'What numerator results from 1/2 + 1/4?',options:['3','2','4','6'],answer:'3',explanation:'Rewrite 1/2 as 2/4, then add 2 and 1 to get numerator 3.'}}
+      ],
+      practice:[
+        [0,'In 3/4, how many parts are selected?',['3','4','1','7'],'3','The numerator 3 counts selected parts.'],
+        [0,'In 5/8, how many equal parts make a whole?',['8','5','3','13'],'8','The denominator 8 counts equal parts in the whole.'],
+        [0,'Which word names the top number of a fraction?',['Numerator','Denominator','Whole','Product'],'Numerator','The top number is called the numerator.'],
+        [1,'What is 1/2 as a decimal?',['0.5','0.25','0.75','2'],'0.5','One half is 0.5.'],
+        [1,'Equivalent fractions have what value?',['Equal','Larger','Smaller','Zero'],'Equal','Equivalent fractions name an equal amount.'],
+        [1,'What numerator does 2/4 have after simplification?',['1','2','4','8'],'1','Two fourths simplifies to one half.'],
+        [2,'What common denominator works for 1/2 + 1/4?',['4','2','6','8'],'4','Rewrite one half as two fourths.'],
+        [2,'What numerator is in the sum 1/2 + 1/4?',['3','2','4','6'],'3','Two fourths plus one fourth is three fourths.'],
+        [2,'What decimal is 1/4 + 1/4?',['0.5','0.25','0.75','1'],'0.5','Two fourths equal one half, or 0.5.']
+      ]
+    },
+    {
+      id:'photosynthesis',title:'Photosynthesis (Demo)',summary:'See how plants use light, water, and carbon dioxide to make food and release oxygen.',
+      prerequisites:'Know that plants have leaves and need energy to grow.',history:'Experiments over centuries showed that plants gain material from air and water and use light to build sugars.',industry:'Crop production and greenhouse design depend on light, water, and carbon dioxide availability.',insights:'Photosynthesis stores light energy in sugar. Oxygen is released, but plants also need to use some of their sugar for growth and respiration.',timeline:'Start with inputs, locate the process in leaves, then connect it to food webs.',
+      steps:[
+        {objective:'Identify the inputs and outputs',explanation:'Photosynthesis uses light energy, water taken up by roots, and carbon dioxide from the air. Plants use these inputs to build glucose, a sugar, and release oxygen. The sugar stores chemical energy the plant can use for growth. Light is an energy source, not a material ingredient.',example:'A well-watered plant in light can take carbon dioxide from air and produce glucose while oxygen moves out of its leaves.',misconception:'Soil is not the main source of a plant’s food; plants make sugars from carbon dioxide and water using light.',check:{question:'Which gas enters a leaf for photosynthesis?',options:['CO2','Oxygen','Helium','Neon'],answer:'CO2',explanation:'Carbon dioxide, CO2, enters the leaf.'}},
+        {objective:'Locate where light is captured',explanation:'Most photosynthesis in a plant happens in leaf cells containing chloroplasts. Chlorophyll is a green pigment inside chloroplasts that absorbs light. Roots supply water, while tiny openings in leaves allow carbon dioxide to enter. Chloroplasts are structures; chlorophyll is the light-absorbing pigment.',example:'A green leaf has chloroplasts in its cells. Their chlorophyll absorbs light while water and carbon dioxide are available.',misconception:'Chlorophyll and chloroplast are not the same thing: one is a pigment, the other is a cell structure.',check:{question:'Which pigment absorbs light in a leaf?',options:['Chlorophyll','Glucose','Oxygen','Starch'],answer:'Chlorophyll',explanation:'Chlorophyll is the light-absorbing green pigment.'}},
+        {objective:'Connect sugar to energy and food webs',explanation:'Glucose made by photosynthesis stores energy in chemical bonds. A plant can use glucose for respiration, growth, or making other materials. Animals get energy by eating plants or other animals that ate plants. Oxygen released during photosynthesis is important for many organisms, but the plant also respires.',example:'Grass uses light to make glucose. A rabbit eats the grass, transferring some of that stored energy into a food web.',misconception:'Plants do not create energy from nothing; they transform incoming light energy into stored chemical energy.',check:{question:'Which sugar is made during photosynthesis?',options:['Glucose','Protein','Oxygen','Water'],answer:'Glucose',explanation:'Glucose is the sugar made and used to store chemical energy.'}}
+      ],
+      practice:[
+        [0,'Which energy source powers photosynthesis?',['Light','Sound','Wind','Heat'],'Light','Photosynthesis uses light energy.'],
+        [0,'Which liquid do roots supply for photosynthesis?',['Water','Oil','Milk','Acid'],'Water','Roots take up water.'],
+        [0,'Which gas is released during photosynthesis?',['Oxygen','Helium','Neon','Nitrogen'],'Oxygen','Oxygen is released as a product.'],
+        [1,'Which pigment absorbs light?',['Chlorophyll','Glucose','Starch','Water'],'Chlorophyll','Chlorophyll absorbs light.'],
+        [1,'Which structure contains chlorophyll?',['Chloroplast','Nucleus','Root','Seed'],'Chloroplast','Chlorophyll is inside chloroplasts.'],
+        [1,'In which plant part does most photosynthesis occur?',['Leaves','Roots','Flowers','Seeds'],'Leaves','Most photosynthesis occurs in leaves.'],
+        [2,'Which sugar stores chemical energy?',['Glucose','Oxygen','Water','Protein'],'Glucose','Glucose stores chemical energy.'],
+        [2,'What does a rabbit obtain from grass for activity?',['Energy','Light','Sound','Heat'],'Energy','Food transfers stored energy to the rabbit.'],
+        [2,'Light energy becomes what type in glucose?',['Chemical','Sound','Nuclear','Motion'],'Chemical','The energy is stored as chemical energy.']
+      ]
+    },
+    {
+      id:'newton',title:'Newton’s Laws (Demo)',summary:'Explore inertia, force and acceleration, and equal-and-opposite interactions.',
+      prerequisites:'Know the everyday meanings of motion, speed, and mass.',history:'Isaac Newton described three laws that connect forces with changes in motion. They are powerful approximations for ordinary speeds and sizes.',industry:'Vehicle safety, sports equipment, and rocket engineering use these force-and-motion ideas.',insights:'Forces change motion, not merely keep an object moving. Action-reaction forces act on different objects, so they do not cancel on one object.',timeline:'Learn inertia first, calculate force next, then examine interacting pairs.',
+      steps:[
+        {objective:'Explain inertia and the first law',explanation:'Newton’s first law says an object at rest stays at rest, and an object moving at constant velocity keeps moving that way, unless a net external force acts. Inertia is resistance to a change in motion. Greater mass usually means greater inertia. Friction often hides this rule by slowing everyday moving objects.',example:'A hockey puck glides farther on smooth ice than on rough ground because less friction acts to change its motion.',misconception:'A moving object does not require a forward force to keep a constant velocity when the net force is zero.',check:{question:'What resists a change in motion?',options:['Inertia','Friction','Gravity','Speed'],answer:'Inertia',explanation:'Inertia is resistance to a change in motion.'}},
+        {objective:'Calculate with the second law',explanation:'Newton’s second law relates net force, mass, and acceleration: F = m × a. The net force is measured in newtons, mass in kilograms, and acceleration in meters per second squared. For the same mass, a larger net force gives a larger acceleration. For the same force, a larger mass gives a smaller acceleration.',example:'A 2 kg cart accelerating at 3 m/s² needs a net force of 2 × 3 = 6 N.',misconception:'Use net force, not a single force when several forces act. Keep units consistent before calculating.',check:{question:'What net force in N accelerates 2 kg at 3 m/s²?',options:['6','5','3','9'],answer:'6',explanation:'F = m × a = 2 × 3 = 6 N.'}},
+        {objective:'Identify third-law force pairs',explanation:'Newton’s third law says when object A pushes object B, B pushes A with an equal-magnitude force in the opposite direction. The two forces act on different objects. A rocket pushes exhaust gas backward and the gas pushes the rocket forward. This is why the forces do not cancel each other on the rocket.',example:'When a swimmer pushes water backward, the water pushes the swimmer forward with an opposite force.',misconception:'Action and reaction do not cancel on one object because each force acts on a different object.',check:{question:'A third-law partner force has what magnitude?',options:['Equal','Zero','Double','Half'],answer:'Equal',explanation:'The interaction forces have equal magnitude and opposite direction.'}}
+      ],
+      practice:[
+        [0,'What resists a change in motion?',['Inertia','Velocity','Energy','Speed'],'Inertia','Inertia is resistance to motion change.'],
+        [0,'What often slows a puck on rough ground?',['Friction','Inertia','Mass','Light'],'Friction','Friction changes the puck’s motion.'],
+        [0,'With zero net force, velocity stays what?',['Constant','Faster','Slower','Zero'],'Constant','The first law predicts constant velocity.'],
+        [1,'For 2 kg at 3 m/s², what is force in N?',['6','5','3','9'],'6','F = m × a = 6 N.'],
+        [1,'What is the unit of force?',['Newton','Kilogram','Meter','Second'],'Newton','Force is measured in newtons.'],
+        [1,'With the same mass, greater net force gives greater what?',['Acceleration','Mass','Distance','Time'],'Acceleration','F = m × a, so acceleration increases.'],
+        [2,'Third-law forces have what magnitude?',['Equal','Zero','Double','Half'],'Equal','Interaction forces have equal magnitude.'],
+        [2,'Rocket exhaust moves which way?',['Backward','Forward','Upward','Still'],'Backward','The rocket pushes exhaust backward.'],
+        [2,'Third-law forces act on how many objects?',['2','1','3','4'],'2','Each force acts on a different object.']
+      ]
+    }
+  ];
+  function get(id){const source=topics.find(topic=>topic.id===id);if(!source)return null;const lesson={title:source.title,summary:source.summary,prerequisites:source.prerequisites,history:source.history,industry:source.industry,insights:source.insights,timeline:source.timeline,steps:source.steps.map((step,index)=>({id:`step-${index+1}`,...step}))};const questions=source.practice.map(([stepIndex,question,options,answer,explanation],index)=>({id:`q-${index+1}`,question,options,answer,explanation,stepId:`step-${stepIndex+1}`,objective:lesson.steps[stepIndex].objective,evidence:explanation}));return {lesson,questions};}
+  function answer(message,lesson){const words=message.toLowerCase().match(/[a-z]{4,}/g)||[];const steps=lesson.steps||[];const step=steps.find(item=>words.some(word=>item.objective.toLowerCase().includes(word)))||steps[0];const lower=message.toLowerCase();const detail=/mistake|wrong|trap/.test(lower)?step.misconception:/example|show|work/.test(lower)?step.example:step.explanation;return `Prewritten demo guide — ${step.objective}\n\n${detail}\n\nTry the check in the lesson path, or choose another demo topic. This offline demo cannot answer a new, custom question.`;}
+  let dialog;
+  function prompt(error){
+    if(dialog?.open)return;
+    dialog?.remove();
+    dialog=document.createElement('dialog');dialog.className='demo-dialog';dialog.setAttribute('aria-labelledby','demoDialogTitle');
+    const title=document.createElement('h2');title.id='demoDialogTitle';title.textContent=error?'AI is unavailable. Go to demo mode?':'Choose a demo topic';
+    const detail=document.createElement('p');detail.textContent=error?'The AI could not complete that request. You can retry, or continue with prewritten lessons and all three games. Choosing a demo replaces the current lesson in this browser.':'Choose a prewritten topic to learn and practise without an AI connection. This replaces the current lesson in this browser.';
+    const choices=document.createElement('div');choices.className='demo-choices';
+    for(const topic of topics){const button=document.createElement('button');button.type='button';button.textContent=topic.title;button.addEventListener('click',()=>{for(const key of ['aiplay_lesson_request','aiplay_chat_history','aiplay_current_topic','aiplay_dynamic_questions','aiplay_last_lesson','aiplay_lesson_progress','aiplay_exam_roadmap','aiplay_assistant_launch','aiplay_assistant_active'])sessionStorage.removeItem(key);sessionStorage.setItem('aiplay_demo_request',topic.id);sessionStorage.setItem('aiplay_demo_active','true');location.assign('assistant.html');});choices.append(button);}
+    const cancel=document.createElement('button');cancel.type='button';cancel.className='demo-cancel';cancel.textContent=error?'Stay here and retry AI':'Stay here';cancel.addEventListener('click',()=>dialog.close());
+    dialog.append(title,detail,choices,cancel);document.body.append(dialog);dialog.showModal();
+  }
+  window.AiplayDemo={topics:topics.map(({id,title,summary})=>({id,title,summary})),get,answer,prompt};
+})();

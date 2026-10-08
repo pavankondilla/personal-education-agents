@@ -9,6 +9,10 @@ services:
     envVars:
       - key: NVIDIA_API_KEY
         sync: false
+      - key: NVIDIA_API_KEY_2
+        sync: false
+      - key: NVIDIA_API_KEY_3
+        sync: false
       - key: NVIDIA_MODEL
         value: nvidia/nemotron-3-ultra-550b-a55b
       - key: NODE_ENV

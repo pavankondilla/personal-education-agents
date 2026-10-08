@@ -15,6 +15,14 @@ const visionModels = [...new Set([process.env.NVIDIA_VISION_MODEL,'meta/llama-3.
 const endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
 const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.json':'application/json; charset=utf-8'};
 let statusCache = {at:0, value:null};
+const keyCooldowns = new Map();
+function nvidiaKeys() {
+  return [...new Set([
+    process.env.NVIDIA_API_KEY_1 || process.env.NVIDIA_API_KEY,
+    process.env.NVIDIA_API_KEY_2,
+    process.env.NVIDIA_API_KEY_3
+  ].filter(value => typeof value === 'string' && value.trim()).map(value => value.trim()))];
+}
 
 function send(res,status,body,type='application/json; charset=utf-8') { res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}); res.end(typeof body==='string'?body:JSON.stringify(body)); }
 function sendCookie(res,value,maxAge=1209600) { res.setHeader('Set-Cookie',`aiplay_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${process.env.NODE_ENV==='production'?'; Secure':''}`); }
@@ -36,21 +44,47 @@ function tutorInstructions(context) {
 }
 function learningPrompt() { try { return fs.readFileSync(path.join(root,'txt'),'utf8').trim(); } catch { return ''; } }
 async function callModel(messages,{timeout=70000,maxTokens=2200,temperature=0.2,modelName=model,vision=false}={}) {
-  if(!process.env.NVIDIA_API_KEY) throw new Error('NVIDIA_API_KEY is missing. Set it in the server environment and restart.');
-  const signal=AbortSignal.timeout(timeout);
-  for(let attempt=0;attempt<3;attempt++){
-    const body={model:modelName,messages,temperature,max_tokens:maxTokens,stream:false};if(!vision&&modelName===model)body.reasoning_effort='none';if(modelName==='nvidia/nemotron-3.5-lightning-30b-a3b')body.chat_template_kwargs={enable_thinking:false};
-    const response=await fetch(endpoint,{method:'POST',headers:{'Authorization':`Bearer ${process.env.NVIDIA_API_KEY}`,'Content-Type':'application/json'},signal,body:JSON.stringify(body)});
-    if(!response.ok){
-      const temporary=[429,500,502,503,504].includes(response.status);
-      if(temporary&&attempt<2){await response.body?.cancel();const delay=Math.min(Number(response.headers.get('retry-after'))*1000||500*(attempt+1),2000);await new Promise(resolve=>setTimeout(resolve,delay));continue;}
-      if(temporary)throw new Error('NVIDIA is busy right now. Please try again in a moment.');
-      throw new Error(`NVIDIA API returned ${response.status}.`);
+  const configured=nvidiaKeys();
+  if(!configured.length) throw new Error('No NVIDIA API key is configured. Add NVIDIA_API_KEY_1 to the server environment.');
+  const available=configured.filter(key => (keyCooldowns.get(key)||0)<=Date.now());
+  if(!available.length) throw new Error('All configured NVIDIA keys are temporarily unavailable. Please try again shortly.');
+  const deadline=Date.now()+timeout;
+  const body={model:modelName,messages,temperature,max_tokens:maxTokens,stream:false};
+  if(!vision&&modelName===model)body.reasoning_effort='none';
+  if(modelName==='nvidia/nemotron-3.5-lightning-30b-a3b')body.chat_template_kwargs={enable_thinking:false};
+  for(let index=0;index<available.length;index++){
+    const key=available[index];
+    const remaining=deadline-Date.now();
+    if(remaining<=0)break;
+    const remainingKeys=available.length-index;
+    const reserve=Math.min(10000,Math.floor(remaining/remainingKeys));
+    const requestTimeout=Math.max(1000,remaining-reserve*(remainingKeys-1));
+    let response;
+    try{
+      response=await fetch(endpoint,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(requestTimeout),body:JSON.stringify(body)});
+    }catch(error){
+      keyCooldowns.set(key,Date.now()+10000);
+      if(index===available.length-1)throw new Error('NVIDIA could not be reached with any configured key. Please try again shortly.');
+      continue;
     }
-    const payload=await response.json(); const content=payload?.choices?.[0]?.message?.content;
-    if(typeof content!=='string'||!content.trim())throw new Error('NVIDIA returned an empty response.');
-    return content.trim();
+    if(response.ok){
+      const payload=await response.json();
+      const content=payload?.choices?.[0]?.message?.content;
+      if(typeof content!=='string'||!content.trim())throw new Error('NVIDIA returned an empty response.');
+      keyCooldowns.delete(key);
+      return content.trim();
+    }
+    const code=response.status;
+    const retryAfter=Number(response.headers.get('retry-after'));
+    await response.body?.cancel();
+    if([401,402,403,429,500,502,503,504].includes(code)){
+      const delay=[401,402,403].includes(code)?15*60*1000:code===429?Math.min(Math.max(retryAfter*1000||60000,1000),15*60*1000):10000;
+      keyCooldowns.set(key,Date.now()+delay);
+      continue;
+    }
+    throw new Error(`NVIDIA rejected the request (${code}). Check the selected model and request.`);
   }
+  throw new Error('All configured NVIDIA keys are unavailable right now. Please try again shortly.');
 }
 function extractJson(text) {
   const cleaned=text.replace(/<think>[\s\S]*?<\/think>/gi,'').replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
@@ -115,7 +149,7 @@ async function chatReply(topic,level,history,message,context) {
 async function apiStatus(force=false) {
   if(statusCache.value&&Date.now()-statusCache.at<(force?10000:120000))return statusCache.value;
   let result;
-  if(!process.env.NVIDIA_API_KEY) result={ok:false,message:'NVIDIA key is not configured'};
+  if(!nvidiaKeys().length) result={ok:false,message:'NVIDIA key is not configured'};
   else try { await callModel([{role:'user',content:'Reply with the single word READY.'}],{timeout:15000,maxTokens:8,temperature:0});result={ok:true,message:'NVIDIA AI is responding'}; }
   catch(error){const networkCode=error?.cause?.code;result={ok:false,message:error.name==='TimeoutError'?'NVIDIA request timed out':networkCode?`NVIDIA connection failed (${networkCode})`:cleanText(error.message,120)||'NVIDIA is unavailable'};}
   statusCache={at:Date.now(),value:{...result,checkedAt:new Date().toISOString()}};

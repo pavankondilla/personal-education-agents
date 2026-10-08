@@ -466,6 +466,8 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="game-feedback.css">
+    <script src="game-feedback.js"></script>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -495,8 +497,8 @@
         const correctGreen = '#3ad39f';
 
         // Visual properties
-        const answerBoxWidth = 100;
-        const answerBoxHeight = 60;
+        const answerBoxWidth = 145;
+        const answerBoxHeight = 70;
         const answerBoxMargin = 20;
 
         // Enhanced Game Sounds using Web Audio API
@@ -800,11 +802,12 @@
                             }
                         } catch (error) { console.warn('Unable to load personalised questions.', error); }
                         selectedTopic = sessionStorage.getItem('aiplay_topic');
+                        if (selectedTopic === 'dynamic' && !topics.dynamic) { window.location.replace('assistant.html'); return; }
                         const nextIdxStr = sessionStorage.getItem('aiplay_nextIndex');
                         const g1 = sessionStorage.getItem('aiplay_game1Score');
                         // Basic guards: if missing, go back to game2 to select topic
-                        if (!selectedTopic || nextIdxStr === null || g1 === null) {
-                                window.location.href = 'game2.html';
+                        if (selectedTopic !== 'dynamic' || !topics.dynamic || nextIdxStr === null || g1 === null || sessionStorage.getItem('aiplay_assistant_active') !== 'true') {
+                                window.location.href = 'assistant.html';
                                 return;
                         }
                         nextIndex = parseInt(nextIdxStr, 10) || 0;
@@ -875,7 +878,7 @@
             const t = topics[selectedTopic];
             const q = t.questions[nextIndex + qIndex];
             if (!q) { endGame(); return; }
-            question.text = q.question;
+            question.text = `Question ${qIndex + 1} of 3 · ${q.question}`;
             question.answer = q.answer;
             answers = q.options.slice(); // fixed order, no shuffle
         }
@@ -1001,7 +1004,7 @@
 
         function proceedAfterAnswer(correct) {
             // brief pause, then next or end
-            setTimeout(() => {
+            const advance = () => setTimeout(() => {
                 const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
                 const isMobileDevice = document.body.classList.contains('mobile-version');
                 rocket.y = isMobileDevice ? (canvasHeight * 0.45) : (canvasHeight / 2);
@@ -1021,6 +1024,8 @@
                 }
                 resolving = false;
             }, 500);
+            if (selectedTopic === 'dynamic') window.AiplayFeedback.show(topics.dynamic.questions[nextIndex + qIndex], correct, advance);
+            else advance();
         }
 
         function showEndMessage(msg) {
@@ -1033,6 +1038,7 @@
         function endGame() {
             // Save Rocket game score for next game
             sessionStorage.setItem('aiplay_game2Score', String(game2Score));
+            window.saveAiplayGame?.('Rocket',game2Score,sessionStorage.getItem('aiplay_last_lesson') ? JSON.parse(sessionStorage.getItem('aiplay_last_lesson')).title : selectedTopic);
             
             // Navigate to Game 3 (Fishing)
             window.location.href = 'game3.html';
@@ -1156,7 +1162,7 @@
                 if (gameState === 'playing' || gameState === 'crashing') {
                     // Draw question text with enhanced mobile responsiveness
                     const isMobile = document.body.classList.contains('mobile-version');
-                    const questionFontSize = isMobile ? Math.max(16, Math.min(20, canvasWidth / 25)) : 40;
+                    const questionFontSize = isMobile ? Math.max(16, Math.min(20, canvasWidth / 25)) : 28;
                     const questionY = isMobile ? Math.max(40, canvasHeight / 15) : 80;
                     
                     ctx.font = `bold ${questionFontSize}px "Poppins"`;
@@ -1166,25 +1172,11 @@
                     ctx.strokeStyle = 'rgba(0,0,0,0.5)';
                     ctx.lineWidth = 2;
                     
-                    // Handle long questions on mobile with better wrapping
-                    const text = question.text;
-                    if (isMobile && text.length > 15) {
-                        const words = text.split(' ');
-                        const mid = Math.ceil(words.length / 2);
-                        const line1 = words.slice(0, mid).join(' ');
-                        const line2 = words.slice(mid).join(' ');
-                        
-                        // Draw with stroke for better visibility
-                        ctx.strokeText(line1, canvasWidth / 2, questionY);
-                        ctx.fillText(line1, canvasWidth / 2, questionY);
-                        if (line2) {
-                            ctx.strokeText(line2, canvasWidth / 2, questionY + questionFontSize + 8);
-                            ctx.fillText(line2, canvasWidth / 2, questionY + questionFontSize + 8);
-                        }
-                    } else {
-                        ctx.strokeText(text, canvasWidth / 2, questionY);
-                        ctx.fillText(text, canvasWidth / 2, questionY);
-                    }
+                    // Always wrap by measured width, so a long question never leaves the screen.
+                    const words = question.text.split(' '), lines=[]; let line=''; const maxWidth=canvasWidth*(isMobile?.88:.78);
+                    words.forEach(word=>{const next=line?`${line} ${word}`:word;if(ctx.measureText(next).width>maxWidth&&line){lines.push(line);line=word;}else line=next;});
+                    if(line)lines.push(line);
+                    lines.slice(0,3).forEach((part,index)=>{const y=questionY+index*(questionFontSize+8);ctx.strokeText(part,canvasWidth/2,y,maxWidth);ctx.fillText(part,canvasWidth/2,y,maxWidth);});
 
                     drawAnswers();
                 }
@@ -1293,5 +1285,5 @@
         });
 
     </script>
-</body>
+<script src="auth.js"></script><script src="activity-tracker.js"></script></body>
 </html>

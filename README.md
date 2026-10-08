@@ -46,3 +46,10 @@ After deployment, visit the URL shown by Render. The small status indicator show
 ## Security and limits
 
 This is a single-process app. Study progress is currently stored in the student's browser, not in a shared database, so it will not follow them between devices or survive cleared browser storage. The backend does not provide user accounts. Avoid claiming exam readiness solely from game scores. NVIDIA model availability and response quality depend on the provider and your account.
+# Student accounts and dashboard
+
+Run `npm start`, then open `http://127.0.0.1:4173/`. The home page has **Sign in** and **Create account** buttons. Registration takes a name, email address, and a new Aiplay password. It does not use Google Cloud or email verification. Up to 20 students can register; existing students can always sign in. `auth.html` also has a demo dashboard link with sample data that does not create an account.
+
+Account and learning records are stored in SQLite at `data/aiplay.sqlite` by default. An existing `data/aiplay-data.json` file is imported once and retained. Set `DATA_DIR` to a backed-up persistent volume for hosted deployments; the current free Render configuration does **not** guarantee that local files survive a redeploy. Keep the database and its WAL/SHM files private and back up the entire data directory together.
+
+The dashboard is at `http://127.0.0.1:4173/dashboard.html`. It shows each signed-in student's topics, activity today, chat questions/answers, completed game rounds, accuracy, and rematches. Game activity requires completing a game; leaving a game early does not count as a completed round.

@@ -1,0 +1,9 @@
+.lesson-answer-shade{position:fixed;inset:0;z-index:100000;background:#152237b8;display:grid;place-items:center;padding:18px;font-family:Arial,sans-serif}
+.lesson-answer-card{width:min(440px,100%);padding:24px;border-radius:18px;background:#fff;color:#203047;box-shadow:0 20px 70px #101e3566;text-align:left}
+.lesson-answer-state{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e5f7ea;color:#217047}
+.lesson-answer-state.wrong{background:#fff0eb;color:#a44831}
+.lesson-answer-card h2{margin:14px 0 8px;font-size:24px;line-height:1.2}
+.lesson-answer-card p{margin:0 0 12px;font-size:15px;line-height:1.6;overflow-wrap:anywhere}
+.lesson-answer-card small{display:block;color:#6e7b89;font-size:12px}
+.lesson-answer-card button{margin-top:20px;width:100%;padding:13px 16px;border:0;border-radius:10px;background:#284765;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+.lesson-answer-card button:focus-visible{outline:3px solid #60a5fa;outline-offset:3px}

@@ -2,6 +2,15 @@
   "name": "aiplay-learning-assistant",
   "private": true,
   "version": "1.0.0",
-  "engines": {"node": ">=24.14.0 <25"},
-  "scripts": {"start": "node server.js", "check": "node --check server.js && node --check assistant.js && node --check learn.js && node --check mira-agents.js && node --check study-utils.js && node --check characters.js && node --check api-status.js"}
+  "engines": {
+    "node": ">=24.14.0 <25"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check student-store.js && node --check auth.js && node --check dashboard-extra.js && node --check activity-tracker.js && node --check assistant.js && node --check learn.js && node --check mira-agents.js && node --check study-utils.js && node --check learning-pipeline.js && node --check characters.js && node --check api-status.js",
+    "verify:plan02": "node scripts/verify-plan-02-browser.cjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.64.0"
+  }
 }

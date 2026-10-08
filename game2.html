@@ -577,6 +577,10 @@
                 opacity: 0;
             }
         }
+        /* Long answers remain readable inside larger bubbles. */
+        .bubble, body.web-version .bubble { width:112px !important; height:112px !important; max-width:none !important; box-sizing:border-box; padding:10px !important; font-size:13px !important; line-height:1.12 !important; overflow-wrap:anywhere; text-shadow:none !important; }
+        body.web-version #problem { top:3% !important; max-width:min(76vw,760px) !important; max-height:18vh; overflow:auto; font-size:clamp(17px,2vw,25px) !important; line-height:1.25 !important; padding:14px 22px !important; box-sizing:border-box; }
+        @media (max-width:768px) { .bubble, body.mobile-version .bubble { width:76px !important; height:76px !important; max-width:none !important; padding:6px !important; font-size:10px !important; } body.mobile-version #problem { max-height:22vh; overflow:auto; font-size:15px !important; line-height:1.25 !important; padding:10px 14px !important; } }
     </style>
 </head>
 <body>
@@ -585,8 +589,8 @@
         <div id="topicOverlay">
             <div class="overlay-card">
                 <h1 class="app-title">Aiplay</h1>
-                <p class="app-sub">Math, AI Agents & SQL – Learn fast, then play</p>
-                <div class="topic-grid">
+                <p class="app-sub" id="gameSubtitle">Choose a topic to play</p>
+                <div class="topic-grid" style="display:none">
                     <button class="topic-btn" data-topic="maths">Math</button>
                     <button class="topic-btn" data-topic="aiAgents">AI Agents</button>
                     <button class="topic-btn" data-topic="sql">SQL</button>
@@ -641,6 +645,8 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="game-feedback.css">
+    <script src="game-feedback.js"></script>
     <script>
         // Preloaded topics with one-word options only
                         const topics = {
@@ -1165,6 +1171,7 @@ def greet(name):
           if (qIndex >= GAME1_COUNT) {
             // Save and go to Rocket game
             sessionStorage.setItem('aiplay_game1Score', String(score1));
+            window.saveAiplayGame?.('Bubble',score1,sessionStorage.getItem('aiplay_last_lesson') ? JSON.parse(sessionStorage.getItem('aiplay_last_lesson')).title : selectedTopic);
             sessionStorage.setItem('aiplay_nextIndex', String(GAME1_COUNT));
             // small delay for smoothness
             setTimeout(() => { window.location.href = 'game1.html'; }, 450);
@@ -1172,7 +1179,7 @@ def greet(name):
           }
           const t = topics[selectedTopic];
           const q = t.questions[qIndex];
-          document.getElementById('problem').textContent = q.question;
+          document.getElementById('problem').textContent = `Question ${qIndex + 1} of 3 · ${q.question}`;
           spawnOptionBubbles(q);
         }
 
@@ -1184,7 +1191,7 @@ def greet(name):
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
             bubble.textContent = opt;
-            bubble.style.left = `calc(${positionsPct[i]}vw - 40px)`; // center approx for 80px bubble
+            bubble.style.left = `calc(${positionsPct[i]}vw - 56px)`; // centre the larger answer bubble
                         const duration = 14; // slower float speed
             bubble.style.setProperty('--drift', '0px');
             bubble.style.setProperty('--wobble', '0deg');
@@ -1306,8 +1313,9 @@ def greet(name):
             mark.remove();
                         // Clear any remaining bubbles of this question
                         clearBubbles();
-            qIndex += 1;
-            nextQuestion();
+            const advance = () => {qIndex += 1;nextQuestion();};
+            if (selectedTopic === 'dynamic') window.AiplayFeedback.show(q, correct, advance);
+            else advance();
           }, 600);
         }
 
@@ -1315,27 +1323,37 @@ def greet(name):
         window.addEventListener('load', () => {
           // Aiplay assistant can preselect one of the existing, validated game topics.
           // Standard direct visits still begin with a fresh topic selection.
-          const assistantTopic = sessionStorage.getItem('aiplay_assistant_launch');
+          const assistantTopic = sessionStorage.getItem('aiplay_assistant_launch') || (sessionStorage.getItem('aiplay_assistant_active') === 'true' ? 'dynamic' : null);
           if (assistantTopic === 'dynamic' && topics.dynamic) {
             sessionStorage.removeItem('aiplay_assistant_launch');
             selectedTopic = 'dynamic';
-            summaryTitle.textContent = 'Mira’s lesson game';
-            summaryText.textContent = topics.dynamic.summary;
+            document.querySelector('.topic-grid').style.display = 'none';
+            const lesson = JSON.parse(sessionStorage.getItem('aiplay_last_lesson') || 'null');
+            document.getElementById('gameSubtitle').textContent = 'Your lesson · Bubble → Rocket → Fishing';
+            summaryTitle.textContent = lesson?.title || 'Your lesson';
+            summaryText.textContent = `Three questions here, then three in each of the next two games. All are based on ${lesson?.title || 'the topic you learned'}.`;
             examplesList.innerHTML = '';
-            topics.dynamic.examples.forEach(example => { const li = document.createElement('li'); li.textContent = example; examplesList.appendChild(li); });
+            examplesList.style.display = 'none';
             qaItems.innerHTML = '';
             topics.dynamic.questions.slice(0, 3).forEach((question, index) => { const item = document.createElement('div'); item.className = 'qa-item'; item.textContent = `Q${index + 1}: ${question.question}`; qaItems.appendChild(item); });
             summaryBox.style.display = 'block';
             qaPreview.style.display = 'block';
             startBtn.disabled = false;
-          } else if (assistantTopic && topics[assistantTopic]) {
-            sessionStorage.removeItem('aiplay_assistant_launch');
-            const matchingButton = document.querySelector(`.topic-btn[data-topic="${assistantTopic}"]`);
-            if (matchingButton) matchingButton.click();
+          } else if (assistantTopic === 'dynamic') {
+            document.querySelector('.topic-grid').style.display = 'none';
+            document.getElementById('gameSubtitle').textContent = 'Your lesson questions need to be prepared again';
+            summaryTitle.textContent = 'Questions unavailable';
+            summaryText.textContent = 'Return to your lesson and retry question preparation. Your progress is saved.';
+            summaryBox.style.display = 'block';
+            startBtn.hidden = true;
+            const back = document.createElement('a');back.href = 'assistant.html';back.textContent = 'Return to lesson →';back.className = 'start-btn';summaryBox.append(back);
           } else {
-            sessionStorage.removeItem('aiplay_topic');
-            sessionStorage.removeItem('aiplay_game1Score');
-            sessionStorage.removeItem('aiplay_nextIndex');
+            document.getElementById('gameSubtitle').textContent = 'Learn the topic before playing';
+            summaryTitle.textContent = 'Your lesson comes first';
+            summaryText.textContent = 'Choose a Mira, complete each lesson step, and your three games will open here.';
+            summaryBox.style.display = 'block';
+            startBtn.hidden = true;
+            const back = document.createElement('a');back.href = 'index.html';back.textContent = 'Start a lesson →';back.className = 'start-btn';summaryBox.append(back);
           }
         });
 
@@ -1419,5 +1437,5 @@ def greet(name):
         }, { passive: false });
 
     </script>
-</body>
+<script src="auth.js"></script><script src="activity-tracker.js"></script></body>
 </html>

@@ -8,3 +8,16 @@
 /* Keep the soft palette while making study controls comfortable to read. */
 body .lead{color:#74677d;font-size:14px}body .section-top h2,body .section-top label{font-size:18px}body .quiet-label{font-size:10px;color:#8a7a95}body .session-options label,body .custom-exam{color:#807088;font-size:11px}body .session-options input,body .session-options select{font-size:12px;color:#63506e}body .companion-copy>p:not(.agent-traits):not(.rules-label){font-size:13px;color:#7b688b}body .companion-copy li{font-size:12px;color:#795f86}body .rules-link{font-size:11px;color:#775887}body .companion-note p{font-size:10px;color:#806389}body .form-note{color:#8e7e9c}body .study-loop article p{font-size:12px;color:#827089}body .study-loop h3{font-size:14px}body .primary{font-size:12px}body .agent-option strong{font-size:12px}body .agent-option small{font-size:10px;color:#8b7999}
 @media(max-width:480px){body .lead{font-size:12px}body .agent-option strong{font-size:10px}body .agent-option small{font-size:9px}body .section-top h2,body .section-top label{font-size:17px}body .study-loop article p{font-size:12px}}
+
+.session-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.session-options[hidden],.custom-exam[hidden]{display:none!important}
+.session-bottom{flex-wrap:wrap}
+.input-tools .attach-control{white-space:nowrap}
+@media(max-width:480px){.session-options{grid-template-columns:1fr}.session-options>label:last-child{grid-column:auto;display:block}.session-options>label:last-child select{margin-top:6px}}
+
+/* Clear agent roles and a single focused action. */
+.agent-option{min-height:158px;justify-content:center;text-align:center;padding:13px 8px 16px}
+.agent-option small{line-height:1.45;min-height:2.8em}
+.session-bottom{justify-content:flex-end}
+.session-bottom .primary{min-width:190px}
+@media(max-width:480px){.agent-option{min-height:153px;padding:9px 3px 13px}.agent-option small{line-height:1.35}.session-bottom .primary{width:100%}}

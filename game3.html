@@ -597,6 +597,52 @@
             text-align: center !important;
             line-height: 1.4 !important;
         }
+        /* A separate question strip sits ABOVE the canvas, never over the hook. */
+        body { --question-strip: 104px; }
+        body .game-container { background: #eaf8ff !important; }
+        body #gameCanvas {
+            position: fixed !important;
+            top: var(--question-strip) !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - var(--question-strip)) !important;
+            height: calc(100dvh - var(--question-strip)) !important;
+            max-width: none !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+        }
+        body #questionDisplay {
+            position: fixed !important;
+            top: 8px !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+            max-width: 900px !important;
+            height: calc(var(--question-strip) - 20px) !important;
+            max-height: none !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+            transform: none !important;
+            animation: none !important;
+            transition: none !important;
+            opacity: 1 !important;
+            padding: 12px 18px !important;
+            font: 600 clamp(14px, 1.5vw, 18px)/1.4 'Nunito', sans-serif !important;
+            color: #18354a !important;
+            background: #ffffff !important;
+            border: 1px solid #b8dfee !important;
+            border-radius: 16px !important;
+            box-shadow: 0 3px 10px #153d5010 !important;
+            text-shadow: none !important;
+            overflow: auto !important;
+            overflow-wrap: anywhere;
+            pointer-events: auto !important;
+            touch-action: pan-y;
+        }
+        @media (max-height: 480px) {
+            body { --question-strip: 80px; }
+            body #questionDisplay { padding: 7px 12px !important; font-size: 14px !important; }
+        }
     </style>
 </head>
 <body>
@@ -658,6 +704,8 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="game-feedback.css">
+    <script src="game-feedback.js"></script>
     <script>
         // Game configuration
         const gameConfig = {
@@ -1120,7 +1168,7 @@
                         this.topics.dynamic = { questions: dynamicQuestions };
                     }
                 } catch (error) { console.warn('Unable to load personalised questions.', error); }
-                if (!this.topics[this.selectedTopic]) this.selectedTopic = 'maths';
+                if (this.selectedTopic !== 'dynamic' || !this.topics.dynamic || sessionStorage.getItem('aiplay_assistant_active') !== 'true') { window.location.replace('assistant.html'); this.currentQuestions = []; return; }
                 this.currentQuestions = this.topics[this.selectedTopic].questions.slice(this.nextIndex, this.nextIndex + this.maxQuestions);
             }
             
@@ -1133,7 +1181,7 @@
                     // Add fade-in animation
                     questionEl.classList.remove('hide');
                     questionEl.classList.add('show');
-                    questionEl.textContent = q.question;
+                    questionEl.textContent = `Question ${this.questionsAnswered + 1} of 3 · ${q.question}`;
                     
                     // Force black text for PC version
                     if (document.body.classList.contains('web-version')) {
@@ -1144,7 +1192,7 @@
                     
                     // Auto-hide question after 5 seconds for PC (longer for reading)
                     const hideDelay = document.body.classList.contains('web-version') ? 6000 : 4000;
-                    setTimeout(() => {
+                    if (this.selectedTopic !== 'dynamic') setTimeout(() => {
                         questionEl.classList.remove('show');
                         questionEl.classList.add('hide');
                     }, hideDelay);
@@ -1352,12 +1400,12 @@
                     const answerText = shuffledOptions[i];
                     const isCorrect = answerText === currentQ.answer;
                     
-                    // Calculate fish size based on text length - made smaller
+                    // Give text answers a generous, readable fish surface.
                     const textLength = answerText.length;
-                    const baseWidth = 80;      // Reduced from 120 to 80
-                    const baseHeight = 55;     // Reduced from 80 to 55
-                    const width = Math.max(baseWidth, Math.min(140, baseWidth + textLength * 5));  // Reduced from 200/8 to 140/5
-                    const height = Math.max(baseHeight, Math.min(85, baseHeight + textLength * 1.5));  // Reduced from 120/2 to 85/1.5
+                    const baseWidth = 120;
+                    const baseHeight = 72;
+                    const width = Math.max(baseWidth, Math.min(205, baseWidth + textLength * 6));
+                    const height = Math.max(baseHeight, Math.min(110, baseHeight + textLength * 1.6));
                     
                     // Calculate font size based on fish size and screen size
                     const baseFontSize = Math.max(14, Math.min(20, width / (textLength + 2)));
@@ -1485,6 +1533,7 @@
             handleFishCaught(fish) {
                 this.createSplash(this.hook.x, this.waterSurface);
                 this.playFishCatchSound(fish.isCorrect);
+                const answeredQuestion = this.currentQuestions[this.questionsAnswered];
                 
                 if (fish.isCorrect) {
                     this.score += 1;
@@ -1494,10 +1543,9 @@
                     this.showFeedback(`Wrong! "${fish.answerText}"`, false);
                 }
                 
-                this.questionsAnswered++;
-                this.displayCurrentQuestion();
-                
-                setTimeout(() => {
+                const advance = () => {
+                    this.questionsAnswered++;
+                    this.displayCurrentQuestion();
                     this.resetHook();
                     
                     // Generate new fish for next question or end game
@@ -1506,7 +1554,10 @@
                     } else {
                         this.initializeFishes();
                     }
-                }, 2500);
+                };
+                if (this.selectedTopic === 'dynamic') {
+                    setTimeout(() => {document.getElementById('feedbackOverlay').style.display = 'none';window.AiplayFeedback.show(answeredQuestion, fish.isCorrect, advance);}, 450);
+                } else setTimeout(advance, 2500);
             }
             
             playFishCatchSound(isCorrect) {
@@ -1560,6 +1611,7 @@
                 
                 // Save final scores
                 sessionStorage.setItem('aiplay_game3Score', String(this.score));
+                window.saveAiplayGame?.('Fishing',this.score,sessionStorage.getItem('aiplay_last_lesson') ? JSON.parse(sessionStorage.getItem('aiplay_last_lesson')).title : this.selectedTopic);
                 sessionStorage.setItem('aiplay_totalScore', String(totalScore));
                 
                 // Show final scoreboard
@@ -1932,9 +1984,10 @@
                 this.ctx.textBaseline = 'middle';
                 
                 // Text with outline for better visibility
-                const textMaxWidth = Math.max(48, fish.width - 22);
-                this.ctx.strokeText(fish.answerText, 0, fish.height/8, textMaxWidth);
-                this.ctx.fillText(fish.answerText, 0, fish.height/8, textMaxWidth);
+                const textMaxWidth = Math.max(70, fish.width - 24), words=String(fish.answerText).split(' '), lines=[]; let line='';
+                words.forEach(word=>{const next=line?`${line} ${word}`:word;if(this.ctx.measureText(next).width>textMaxWidth&&line){lines.push(line);line=word;}else line=next;});
+                if(line)lines.push(line);
+                lines.slice(0,2).forEach((part,index)=>{const y=(index-(Math.min(lines.length,2)-1)/2)*(fish.fontSize+2)+fish.height/8;this.ctx.strokeText(part,0,y,textMaxWidth);this.ctx.fillText(part,0,y,textMaxWidth);});
                 
                 this.ctx.restore();
             }
@@ -2119,5 +2172,5 @@
         });
 
     </script>
-</body>
+<script src="auth.js"></script><script src="activity-tracker.js"></script></body>
 </html>

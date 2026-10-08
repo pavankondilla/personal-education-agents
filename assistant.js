@@ -116,7 +116,7 @@
     if(changed&&announce){setMood('idle');const note=document.createElement('p');note.className='context-notice';note.textContent=`${agent.name} is here. Your conversation stays with you.`;conversation.append(note);scrollDown();}
   }
   async function requestReply(path,body){
-    const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/image-topic'?190000:220000)});
+    const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',...window.AiplayAISettings?.headers()},body:JSON.stringify(body),signal:AbortSignal.timeout(path==='/api/image-topic'?190000:220000)});
     let payload;try{payload=await response.json();}catch{throw new Error('The tutor service did not return a readable response. Check the AI status and retry.');}
     if(!response.ok)throw new Error(payload.error||'The tutor service is unavailable. Please retry.');return payload;
   }

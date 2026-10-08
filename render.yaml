@@ -11,9 +11,13 @@ services:
         sync: false
       - key: NVIDIA_API_KEY_2
         sync: false
-      - key: NVIDIA_API_KEY_3
+      - key: GROK_API_KEY_3
         sync: false
       - key: NVIDIA_MODEL
         value: nvidia/nemotron-3-ultra-550b-a55b
+      - key: OPENROUTER_MODEL
+        value: nvidia/nemotron-3-ultra-550b-a55b:free
+      - key: GROK_MODEL
+        value: grok-4.3
       - key: NODE_ENV
         value: production

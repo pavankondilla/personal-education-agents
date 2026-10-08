@@ -2,7 +2,7 @@
 
 Mira is a study assistant with three modes: Teacher explains a concept, Exam Coach helps with exam preparation, and Scientist explores how things work. Students can then practise with three topic-based games and review their results.
 
-The app is a Node.js web service. NVIDIA API keys are used only on the server, never in browser code. AI features require at least one working key and model access; the app reports an unavailable state when the provider cannot be reached.
+The app is a Node.js web service. NVIDIA, OpenRouter, and xAI API keys stay on the server, never in browser code. AI features require at least one enabled, working provider with model access.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ Use Node.js 24.14.0 or a compatible Node 24 release.
 
 ```powershell
 Copy-Item .env.example .env
-# Edit .env and set NVIDIA_API_KEY, NVIDIA_API_KEY_2 and NVIDIA_API_KEY_3.
+# Edit .env and set the provider keys you have. NVIDIA_API_KEY_2 is an OpenRouter key.
 npm start
 ```
 
@@ -32,16 +32,18 @@ Add these environment variables in the Render dashboard:
 
 | Variable | Value |
 | --- | --- |
-| `NVIDIA_API_KEY` | Your private NVIDIA API key (required for AI features) |
-| `NVIDIA_API_KEY_2` | Optional second key, used when the primary key fails |
-| `NVIDIA_API_KEY_3` | Optional third key, used when the first two fail |
+| `NVIDIA_API_KEY` | NVIDIA Build key; `NVIDIA_API_KEY_1` is also accepted |
+| `NVIDIA_API_KEY_2` | OpenRouter key (legacy variable name); `OPENROUTER_API_KEY` is also accepted |
+| `GROK_API_KEY_3` | xAI Grok key; opt-in in AI Settings because xAI API usage may be billed |
 | `NVIDIA_MODEL` | `nvidia/nemotron-3-ultra-550b-a55b` (default; change only if your account uses another supported model) |
+| `OPENROUTER_MODEL` | `nvidia/nemotron-3-ultra-550b-a55b:free` (default) |
+| `GROK_MODEL` | `grok-4.3` (default; xAI model access and charges depend on your account) |
 
-The server tries the primary key first, then keys 2 and 3 when a key is rejected, rate limited, temporarily unavailable, or cannot connect. A failed key is skipped for a short cooldown. The older `NVIDIA_API_KEY` setting remains supported; `NVIDIA_API_KEY_1` can replace it as the primary setting if preferred. Keys from the same NVIDIA account may share a quota, so three keys do not necessarily give three independent quotas. Never put real keys in `render.yaml`, `.env.example`, or GitHub.
+Use **AI settings** beside **AI working** on the study or chat page to turn configured providers on or off and choose which one to use first. The choice is saved in that browser and sent with AI requests; it does not change another student's settings. By default, NVIDIA is first and OpenRouter second. Grok starts off to avoid unexpected charges. On a provider error, timeout, or rate limit, the server tries the next enabled provider and temporarily cools down failing providers. This cannot bypass provider/account-wide quotas or guarantee uninterrupted AI service. OpenRouter's free model has its own availability and rate limits. Never put real keys in `render.yaml`, `.env.example`, or GitHub.
 
-Do **not** set `PORT` manually on Render. The server listens on Render's assigned port and binds to `0.0.0.0` in production. For Blueprint deployment, Render will prompt for the three keys; for an existing service, enter or update them under **Environment** in the dashboard.
+Do **not** set `PORT` manually on Render. The server listens on Render's assigned port and binds to `0.0.0.0` in production. For Blueprint deployment, Render prompts for the three keys; for an existing service, enter or update them under **Environment** in the dashboard. Your local `.env` is not copied to Render.
 
-After deployment, visit the URL shown by Render. The small status indicator shows whether AI is reachable. `/healthz` verifies that the web server is up; it intentionally does not call NVIDIA, so it can remain healthy while the AI provider is unavailable. The app's AI status endpoint and UI provide the separate provider check.
+After deployment, visit the URL shown by Render. The status indicator checks the enabled providers. `/healthz` verifies that the web server is up; it intentionally does not call an AI provider, so it can remain healthy while AI is unavailable.
 
 ## Checks
 

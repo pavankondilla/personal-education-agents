@@ -17,7 +17,7 @@ services:
         value: nvidia/nemotron-3-ultra-550b-a55b
       - key: OPENROUTER_MODEL
         value: nvidia/nemotron-3-ultra-550b-a55b:free
-      - key: GROK_MODEL
-        value: grok-4.3
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
       - key: NODE_ENV
         value: production

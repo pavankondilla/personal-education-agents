@@ -12,20 +12,20 @@ const host = process.env.RENDER === 'true' || process.env.NODE_ENV === 'producti
 const model = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
 const textModels = [...new Set([model,'nvidia/nemotron-3.5-lightning-30b-a3b'])];
 const visionModels = [...new Set([process.env.NVIDIA_VISION_MODEL,'meta/llama-3.2-90b-vision-instruct','nvidia/nemotron-3-nano-omni-30b-a3b-reasoning','meta/llama-3.2-11b-vision-instruct'].filter(Boolean))];
-const endpoints = {nvidia:'https://integrate.api.nvidia.com/v1/chat/completions',openrouter:'https://openrouter.ai/api/v1/chat/completions',grok:'https://api.x.ai/v1/chat/completions'};
-const providerLabels = {nvidia:'NVIDIA',openrouter:'OpenRouter',grok:'Grok (xAI)'};
+const endpoints = {nvidia:'https://integrate.api.nvidia.com/v1/chat/completions',openrouter:'https://openrouter.ai/api/v1/chat/completions',groq:'https://api.groq.com/openai/v1/chat/completions'};
+const providerLabels = {nvidia:'NVIDIA',openrouter:'OpenRouter',groq:'Groq'};
 const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.json':'application/json; charset=utf-8'};
 const keyCooldowns = new Map();
 function providers() {
   return {
     nvidia:{key:(process.env.NVIDIA_API_KEY_1||process.env.NVIDIA_API_KEY||'').trim(),model,visionModels},
     openrouter:{key:(process.env.NVIDIA_API_KEY_2||process.env.OPENROUTER_API_KEY||'').trim(),model:process.env.OPENROUTER_MODEL||'nvidia/nemotron-3-ultra-550b-a55b:free',visionModels:[]},
-    grok:{key:(process.env.GROK_API_KEY_3||'').trim(),model:process.env.GROK_MODEL||'grok-4.3',visionModels:[process.env.GROK_MODEL||'grok-4.3']}
+    groq:{key:(process.env.GROK_API_KEY_3||process.env.GROQ_API_KEY||'').trim(),model:process.env.GROQ_MODEL||'openai/gpt-oss-120b',visionModels:[]}
   };
 }
 function providerOrder(req) {
   const raw=req.headers['x-ai-providers'];
-  const list=typeof raw==='string'?raw.split(',').map(x=>x.trim().toLowerCase()):['nvidia','openrouter'];
+  const list=typeof raw==='string'?raw.split(',').map(x=>x.trim().toLowerCase().replace(/^grok$/,'groq')):['nvidia','openrouter','groq'];
   return [...new Set(list.filter(x=>Object.hasOwn(endpoints,x)))];
 }
 function providerStatus() {
@@ -52,7 +52,7 @@ function tutorInstructions(context) {
   return `${agents[context.agent].instructions}\nLearner preferences: ${JSON.stringify(preferences)}. These are not verified official exam details. Do not invent an official syllabus or previous-paper attribution. Answer the actual question and preserve mathematical symbols, numbers and units. A numerical problem requires a worked numerical solution. Use plain readable maths instead of raw LaTeX.`;
 }
 function learningPrompt() { try { return fs.readFileSync(path.join(root,'txt'),'utf8').trim(); } catch { return ''; } }
-async function callModel(messages,{timeout=70000,maxTokens=2200,temperature=0.2,modelName=model,vision=false,order=['nvidia','openrouter'],withProvider=false}={}) {
+async function callModel(messages,{timeout=70000,maxTokens=2200,temperature=0.2,modelName=model,vision=false,order=['nvidia','openrouter','groq'],withProvider=false}={}) {
   if(!order.length)throw new Error('All AI providers are off. Open AI Settings and turn one on.');
   const config=providers();
   const configured=order.filter(id=>config[id]?.key);
@@ -61,7 +61,7 @@ async function callModel(messages,{timeout=70000,maxTokens=2200,temperature=0.2,
     const models=vision?config[id].visionModels:[id==='nvidia'?modelName:config[id].model];
     return models.map(selectedModel=>({id,model:selectedModel}));
   }).filter(item=>(keyCooldowns.get(item.id)||0)<=Date.now());
-  if(!candidates.length)throw new Error(vision?'No enabled provider can read images right now. Enable NVIDIA or Grok in AI Settings.':'Enabled AI providers are temporarily unavailable. Please try again shortly.');
+  if(!candidates.length)throw new Error(vision?'No enabled provider can read images right now. Enable NVIDIA in AI Settings.':'Enabled AI providers are temporarily unavailable. Please try again shortly.');
   const deadline=Date.now()+timeout;
   let lastError='AI providers are temporarily unavailable.';
   for(let index=0;index<candidates.length;index++){
@@ -71,9 +71,10 @@ async function callModel(messages,{timeout=70000,maxTokens=2200,temperature=0.2,
     if(remaining<=0)break;
     const remainingAttempts=candidates.length-index;
     const requestTimeout=Math.max(1000,Math.floor(remaining/remainingAttempts));
-    const body={model:selectedModel,messages,temperature,max_tokens:maxTokens,stream:false};
+    const body={model:selectedModel,messages,temperature,max_tokens:id==='groq'?Math.min(maxTokens,3500):maxTokens,stream:false};
     if(id==='nvidia'&&!vision&&selectedModel===model)body.reasoning_effort='none';
     if(id==='nvidia'&&selectedModel==='nvidia/nemotron-3.5-lightning-30b-a3b')body.chat_template_kwargs={enable_thinking:false};
+    if(id==='groq'&&/^openai\/gpt-oss-(20b|120b)$/.test(selectedModel))body.reasoning_effort='low';
     let response;
     try{
       response=await fetch(endpoints[id],{method:'POST',headers:{Authorization:`Bearer ${config[id].key}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(requestTimeout),body:JSON.stringify(body)});
@@ -156,7 +157,7 @@ async function chatReply(topic,level,history,message,context,order) {
 }
 async function apiStatus(order) {
   let result;
-  try { const answer=await callModel([{role:'user',content:'Reply with the single word READY.'}],{timeout:18000,maxTokens:64,temperature:0,order,withProvider:true});result={ok:true,message:`${providerLabels[answer.provider]} is responding`,activeProvider:answer.provider}; }
+  try { const answer=await callModel([{role:'user',content:'Reply with the single word READY.'}],{timeout:18000,maxTokens:128,temperature:0,order,withProvider:true});result={ok:true,message:`${providerLabels[answer.provider]} is responding`,activeProvider:answer.provider}; }
   catch(error){result={ok:false,message:cleanText(error.message,160)||'AI is unavailable'};}
   return {...result,providers:providerStatus(),checkedAt:new Date().toISOString()};
 }

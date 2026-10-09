@@ -2,7 +2,7 @@
 
 Mira is a study assistant with three modes: Teacher explains a concept, Exam Coach helps with exam preparation, and Scientist explores how things work. Students can then practise with three topic-based games and review their results.
 
-The app is a Node.js web service. NVIDIA, OpenRouter, and xAI API keys stay on the server, never in browser code. AI features require at least one enabled, working provider with model access.
+The app is a Node.js web service. NVIDIA, OpenRouter, and Groq API keys stay on the server, never in browser code. AI features require at least one enabled, working provider with model access.
 
 ## Run locally
 
@@ -34,12 +34,12 @@ Add these environment variables in the Render dashboard:
 | --- | --- |
 | `NVIDIA_API_KEY` | NVIDIA Build key; `NVIDIA_API_KEY_1` is also accepted |
 | `NVIDIA_API_KEY_2` | OpenRouter key (legacy variable name); `OPENROUTER_API_KEY` is also accepted |
-| `GROK_API_KEY_3` | xAI Grok key; opt-in in AI Settings because xAI API usage may be billed |
+| `GROK_API_KEY_3` | Groq API key (legacy spelling); `GROQ_API_KEY` is also accepted. This is **not** an xAI Grok key. |
 | `NVIDIA_MODEL` | `nvidia/nemotron-3-ultra-550b-a55b` (default; change only if your account uses another supported model) |
 | `OPENROUTER_MODEL` | `nvidia/nemotron-3-ultra-550b-a55b:free` (default) |
-| `GROK_MODEL` | `grok-4.3` (default; xAI model access and charges depend on your account) |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` (default; a text model available to the configured Groq key) |
 
-Use **AI settings** beside **AI working** on the study or chat page to turn configured providers on or off and choose which one to use first. The choice is saved in that browser and sent with AI requests; it does not change another student's settings. By default, NVIDIA is first and OpenRouter second. Grok starts off to avoid unexpected charges. On a provider error, timeout, or rate limit, the server tries the next enabled provider and temporarily cools down failing providers. This cannot bypass provider/account-wide quotas or guarantee uninterrupted AI service. OpenRouter's free model has its own availability and rate limits. Never put real keys in `render.yaml`, `.env.example`, or GitHub.
+Use **AI settings** beside **AI working** on the study or chat page to turn configured providers on or off and choose which one to use first. The choice is saved in that browser and sent with AI requests; it does not change another student's settings. By default, NVIDIA, OpenRouter, then Groq are enabled in that order. On a provider error, timeout, or rate limit, the server tries the next enabled provider and temporarily cools down failing providers. This cannot bypass provider/account-wide quotas or guarantee uninterrupted AI service. OpenRouter's free model and Groq's free plan have limits. The selected Groq model is text-only, so question-paper image reading still needs NVIDIA or offers demo mode when image AI fails. Never put real keys in `render.yaml`, `.env.example`, or GitHub.
 
 If AI status or a lesson, chat, question-bank, or image-reading request fails, the app offers a demo-mode dialog. Learners can stay and retry, or choose a prewritten Fractions, Photosynthesis, or Newton's Laws lesson. Each demo has three checks and a nine-question bank for Bubble, Rocket, and Fishing, without calling an AI API. AI Settings also has an **Explore demo topics** button. Demo chat gives clearly labelled prewritten guidance, not generated answers to arbitrary questions. Signed-in game results can still be recorded while the backend is available, under a topic title marked `(Demo)`.
 

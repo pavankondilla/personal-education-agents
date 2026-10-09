@@ -1,11 +1,11 @@
 (() => {
-  const ids=['nvidia','openrouter','grok'];
-  const key='aiplay_ai_provider_order';
-  let order=['nvidia','openrouter'];
-  try { const saved=JSON.parse(localStorage.getItem(key));if(Array.isArray(saved))order=[...new Set(saved.filter(id=>ids.includes(id)))]; } catch { /* Browser storage may be unavailable. */ }
+  const ids=['nvidia','openrouter','groq'];
+  const key='aiplay_ai_provider_order_v2';
+  let order=['nvidia','openrouter','groq'];
+  try { const current=localStorage.getItem(key),saved=JSON.parse(current??localStorage.getItem('aiplay_ai_provider_order'));if(Array.isArray(saved)){order=[...new Set(saved.map(id=>id==='grok'?'groq':id).filter(id=>ids.includes(id)))];if(current===null&&!saved.includes('grok')&&!saved.includes('groq'))order.push('groq');} } catch { /* Browser storage may be unavailable. */ }
   const save=()=>{try{localStorage.setItem(key,JSON.stringify(order));}catch{/* Keep in-memory choice. */}};
   window.AiplayAISettings={headers:()=>({'X-AI-Providers':order.join(',')})};
-  const descriptions={nvidia:'NVIDIA Build',openrouter:'OpenRouter · Nemotron free model',grok:'xAI Grok · may incur charges'};
+  const descriptions={nvidia:'NVIDIA Build',openrouter:'OpenRouter · Nemotron free model',groq:'Groq · GPT-OSS 120B text model'};
   const buttons=[...document.querySelectorAll('[data-api-status]')];
   if(!buttons.length)return;
   let providers=[];
@@ -28,7 +28,7 @@
         panel.append(row);
       }
       const demo=document.createElement('button');demo.type='button';demo.className='ai-demo-button';demo.textContent='Explore demo topics';demo.addEventListener('click',()=>window.AiplayDemo?.prompt());panel.append(demo);
-      const foot=document.createElement('p');foot.className='ai-settings-foot';foot.textContent='Keys stay on the server. Choices are saved in this browser. Grok API usage is not guaranteed free.';panel.append(foot);
+      const foot=document.createElement('p');foot.className='ai-settings-foot';foot.textContent='Keys stay on the server. Choices are saved in this browser. Groq free-plan limits and account billing still apply.';panel.append(foot);
     }
   }
   for(const button of buttons){
